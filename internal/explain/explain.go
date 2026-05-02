@@ -8,11 +8,23 @@ import (
 	"sync"
 )
 
+// LayoutSegment describes a decoded character range of an identified value.
+// The web UI uses these to render colored visual breakdowns.
+type LayoutSegment struct {
+	Start       int    `json:"start"`
+	End         int    `json:"end"`
+	Label       string `json:"label"`
+	Type        string `json:"type"` // "time", "random", "version", "counter", "type", "meta"
+	Value       string `json:"value"`
+	Description string `json:"description"`
+}
+
 // Match describes a successful format detection.
 type Match struct {
 	Format     string
 	Confidence float64
 	Fields     map[string]string
+	Layout     []LayoutSegment
 }
 
 // Detector identifies and decodes a specific format.

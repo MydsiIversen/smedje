@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>smedje — Forge every key, ID, cert, and config</title>
+  <meta name="description" content="One CLI to generate UUIDs, SSH keys, TLS certs, passwords, WireGuard configs, and more. RFC-compliant, crypto-safe defaults.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: '#0A0B0E',
+            panel: '#13151A',
+            border: '#1F222A',
+            fg: '#E8E6E1',
+            muted: '#6B6E78',
+            forge: '#E2683A',
+          },
+          fontFamily: {
+            sans: ['Geist', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['Geist Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body {
+      background-color: #0A0B0E;
+      color: #E8E6E1;
+      font-family: 'Geist', system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+    }
+    code, .font-mono {
+      font-family: 'Geist Mono', ui-monospace, SFMono-Regular, monospace;
+      font-size: 15px;
+    }
+    .feature-card {
+      transition: transform 0.2s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Terminal typing animation */
+    @keyframes cycle-frames {
+      0%, 30%    { opacity: 1; }
+      33%, 96%   { opacity: 0; }
+      100%       { opacity: 1; }
+    }
+    .term-frame-1 { animation: cycle-frames 12s infinite; }
+    .term-frame-2 { animation: cycle-frames 12s infinite 4s; }
+    .term-frame-3 { animation: cycle-frames 12s infinite 8s; }
+
+    @keyframes blink-cursor {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+    .cursor::after {
+      content: '\2588';
+      animation: blink-cursor 1s step-end infinite;
+      color: #E2683A;
+    }
+
+    @keyframes type-cmd {
+      0%   { width: 0; }
+      60%  { width: 100%; }
+      100% { width: 100%; }
+    }
+    .typed {
+      overflow: hidden;
+      white-space: nowrap;
+      display: inline-block;
+      animation: type-cmd 2s steps(40, end) forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Hero -->
+  <section class="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
+    <div class="flex items-center justify-center gap-3 mb-6">
+      <!-- Anvil SVG mark -->
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 28h24v4H8zM6 26h28v2H6zM12 18h16l2 8H10zM16 12h8v6h-8zM14 10h12v2H14z" fill="#E2683A"/>
+      </svg>
+      <span class="text-4xl sm:text-5xl font-bold font-mono tracking-tight">smedje</span>
+    </div>
+    <p class="text-xl sm:text-2xl text-muted mb-10">Forge every key, ID, cert, and config.</p>
+
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+      <a href="https://app.smedje.net"
+         class="inline-flex items-center gap-2 bg-forge hover:bg-orange-600 text-white font-medium px-6 py-3 rounded transition-colors">
+        Try the demo <span aria-hidden="true">&rarr;</span>
+      </a>
+      <a href="https://github.com/MydsiIversen/smedje"
+         class="inline-flex items-center gap-2 border border-border hover:border-muted text-fg font-medium px-6 py-3 rounded transition-colors">
+        View on GitHub
+      </a>
+    </div>
+
+    <div class="relative inline-block w-full max-w-xl">
+      <div class="bg-panel border border-border rounded px-4 py-3 font-mono text-sm text-left flex items-center justify-between gap-4">
+        <code class="text-fg truncate select-all">go install github.com/MydsiIversen/smedje/cmd/smedje@latest</code>
+        <button class="copy-btn text-muted hover:text-fg text-xs border border-border rounded px-2 py-1 shrink-0 transition-colors" type="button">Copy</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature Cards -->
+  <section class="max-w-5xl mx-auto px-6 pb-20">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="feature-card bg-panel border border-border p-6 rounded">
+        <h3 class="text-lg font-bold mb-2">Forge anything</h3>
+        <p class="text-muted text-sm leading-relaxed">16+ generators for UUIDs, SSH keys, TLS certs, passwords, and more. RFC-compliant, crypto-safe defaults.</p>
+      </div>
+      <div class="feature-card bg-panel border border-border p-6 rounded">
+        <h3 class="text-lg font-bold mb-2">Decode anything</h3>
+        <p class="text-muted text-sm leading-relaxed">Paste any ID to see its structure. Timestamps, versions, and entropy &mdash; color-coded and explained.</p>
+      </div>
+      <div class="feature-card bg-panel border border-border p-6 rounded">
+        <h3 class="text-lg font-bold mb-2">Get recommendations</h3>
+        <p class="text-muted text-sm leading-relaxed">Opinionated guidance for 8 use cases. Know which ID format, key type, or hash to reach for.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Demo -->
+  <section class="max-w-3xl mx-auto px-6 pb-20">
+    <div class="bg-panel border border-border rounded overflow-hidden">
+      <!-- Terminal title bar -->
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-border">
+        <span class="w-3 h-3 rounded-full bg-red-500"></span>
+        <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+        <span class="w-3 h-3 rounded-full bg-green-500"></span>
+        <span class="ml-2 text-muted text-xs font-mono">terminal</span>
+      </div>
+      <!-- Terminal body -->
+      <div class="p-4 font-mono text-sm relative min-h-[5rem]">
+        <!-- Frame 1 -->
+        <div class="term-frame-1 absolute inset-0 p-4">
+          <div><span class="text-forge">$</span> smedje uuid v7</div>
+          <div class="text-muted mt-1">019662b4-8c8a-7def-b7c0-9e1c2a3b4d5e</div>
+        </div>
+        <!-- Frame 2 -->
+        <div class="term-frame-2 absolute inset-0 p-4" style="opacity:0">
+          <div><span class="text-forge">$</span> smedje password --length 32</div>
+          <div class="text-muted mt-1">kR9!mXp4@nL7#vQ2wE6*sT8&amp;jY0$bH3f</div>
+        </div>
+        <!-- Frame 3 -->
+        <div class="term-frame-3 absolute inset-0 p-4" style="opacity:0">
+          <div><span class="text-forge">$</span> smedje explain 019662b4-8c8a-7def-b7c0-9e1c2a3b4d5e</div>
+          <div class="text-muted mt-1">
+            <div>Format: UUIDv7 (Unix time-ordered)</div>
+            <div class="ml-4">timestamp: 2025-01-15T10:30:28.042Z</div>
+            <div class="ml-4">version: v7</div>
+            <div class="ml-4">variant: RFC 9562</div>
+          </div>
+        </div>
+        <!-- Invisible spacer to hold height -->
+        <div class="invisible">
+          <div>$ smedje explain 019662b4-8c8a-7def-b7c0-9e1c2a3b4d5e</div>
+          <div class="mt-1">
+            <div>Format: UUIDv7 (Unix time-ordered)</div>
+            <div>timestamp: 2025-01-15T10:30:28.042Z</div>
+            <div>version: v7</div>
+            <div>variant: RFC 9562</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why Smedje -->
+  <section class="max-w-5xl mx-auto px-6 pb-20">
+    <h2 class="text-2xl font-bold text-center mb-10">Why smedje</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div>
+        <h3 class="text-lg font-bold mb-2">Modern defaults</h3>
+        <p class="text-muted text-sm leading-relaxed">Ed25519 over RSA. UUIDv7 over v4. Argon2id over bcrypt. Smedje picks the right primitive so you don't have to research it.</p>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold mb-2">Single binary</h3>
+        <p class="text-muted text-sm leading-relaxed">One <code class="text-fg">go install</code>. No runtime dependencies, no Docker, no config files. Works offline, runs anywhere Go compiles.</p>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold mb-2">Open source</h3>
+        <p class="text-muted text-sm leading-relaxed">AGPL-3.0 licensed. Read every line, fork it, run your own instance. No telemetry in the CLI. Privacy-first analytics on the demo.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-border py-10">
+    <div class="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-6 text-sm text-muted">
+      <div class="flex items-center gap-4">
+        <a href="https://github.com/MydsiIversen/smedje" class="hover:text-fg transition-colors">GitHub</a>
+        <a href="https://app.smedje.net" class="hover:text-fg transition-colors">Demo</a>
+        <a href="https://app.smedje.net/privacy" class="hover:text-fg transition-colors">Privacy</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <svg width="16" height="16" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 28h24v4H8zM6 26h28v2H6zM12 18h16l2 8H10zM16 12h8v6h-8zM14 10h12v2H14z" fill="#6B6E78"/>
+        </svg>
+        <span>&copy; 2026 Mads Iversen &mdash; AGPL-3.0</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.querySelector('.copy-btn').addEventListener('click', function() {
+      navigator.clipboard.writeText('go install github.com/MydsiIversen/smedje/cmd/smedje@latest');
+      this.textContent = 'Copied!';
+      setTimeout(() => { this.textContent = 'Copy'; }, 2000);
+    });
+  </script>
+</body>
+</html>

@@ -74,11 +74,111 @@ func (d *uuidDetector) Detect(input string) (Match, bool) {
 		fields["version"] = "max"
 	}
 
+	layout := uuidLayout(input, version, fields["version"])
+
 	return Match{
 		Format:     fields["format"],
 		Confidence: 0.95,
 		Fields:     fields,
+		Layout:     layout,
 	}, true
+}
+
+// uuidLayout returns the layout segments for a UUID string based on version.
+func uuidLayout(input, version, resolvedVersion string) []LayoutSegment {
+	// Nil and Max UUIDs: single meta segment.
+	if resolvedVersion == "nil" || resolvedVersion == "max" {
+		label := "nil"
+		desc := "Nil UUID (all zeros)"
+		if resolvedVersion == "max" {
+			label = "max"
+			desc = "Max UUID (all ones)"
+		}
+		return []LayoutSegment{
+			{Start: 0, End: 36, Label: label, Type: "meta", Value: input, Description: desc},
+		}
+	}
+
+	sep := func(pos int) LayoutSegment {
+		return LayoutSegment{Start: pos, End: pos + 1, Label: "sep", Type: "meta", Value: "-", Description: "Separator"}
+	}
+
+	switch version {
+	case "1":
+		return []LayoutSegment{
+			{Start: 0, End: 8, Label: "time-low", Type: "time", Value: input[0:8], Description: "Timestamp (low 32 bits)"},
+			sep(8),
+			{Start: 9, End: 13, Label: "time-mid", Type: "time", Value: input[9:13], Description: "Timestamp (mid 16 bits)"},
+			sep(13),
+			{Start: 14, End: 15, Label: "version", Type: "version", Value: input[14:15], Description: "Version (1)"},
+			{Start: 15, End: 18, Label: "time-high", Type: "time", Value: input[15:18], Description: "Timestamp (high 12 bits)"},
+			sep(18),
+			{Start: 19, End: 20, Label: "variant", Type: "version", Value: input[19:20], Description: "Variant (RFC 9562)"},
+			{Start: 20, End: 23, Label: "clock-seq", Type: "counter", Value: input[20:23], Description: "Clock sequence"},
+			sep(23),
+			{Start: 24, End: 36, Label: "node", Type: "meta", Value: input[24:36], Description: "Node (MAC address)"},
+		}
+	case "4":
+		return []LayoutSegment{
+			{Start: 0, End: 8, Label: "rand-a", Type: "random", Value: input[0:8], Description: "Random (32 bits)"},
+			sep(8),
+			{Start: 9, End: 13, Label: "rand-b", Type: "random", Value: input[9:13], Description: "Random (16 bits)"},
+			sep(13),
+			{Start: 14, End: 15, Label: "version", Type: "version", Value: input[14:15], Description: "Version (4)"},
+			{Start: 15, End: 18, Label: "rand-c", Type: "random", Value: input[15:18], Description: "Random (12 bits)"},
+			sep(18),
+			{Start: 19, End: 20, Label: "variant", Type: "version", Value: input[19:20], Description: "Variant (RFC 9562)"},
+			{Start: 20, End: 23, Label: "rand-d", Type: "random", Value: input[20:23], Description: "Random (high)"},
+			sep(23),
+			{Start: 24, End: 36, Label: "rand-e", Type: "random", Value: input[24:36], Description: "Random (low 48 bits)"},
+		}
+	case "6":
+		return []LayoutSegment{
+			{Start: 0, End: 8, Label: "time-high", Type: "time", Value: input[0:8], Description: "Timestamp (high 32 bits)"},
+			sep(8),
+			{Start: 9, End: 13, Label: "time-mid", Type: "time", Value: input[9:13], Description: "Timestamp (mid 16 bits)"},
+			sep(13),
+			{Start: 14, End: 15, Label: "version", Type: "version", Value: input[14:15], Description: "Version (6)"},
+			{Start: 15, End: 18, Label: "time-low", Type: "time", Value: input[15:18], Description: "Timestamp (low 12 bits)"},
+			sep(18),
+			{Start: 19, End: 20, Label: "variant", Type: "version", Value: input[19:20], Description: "Variant (RFC 9562)"},
+			{Start: 20, End: 23, Label: "clock-seq", Type: "counter", Value: input[20:23], Description: "Clock sequence"},
+			sep(23),
+			{Start: 24, End: 36, Label: "node", Type: "meta", Value: input[24:36], Description: "Node (48 bits)"},
+		}
+	case "7":
+		return []LayoutSegment{
+			{Start: 0, End: 8, Label: "time-high", Type: "time", Value: input[0:8], Description: "Timestamp (high 32 bits)"},
+			sep(8),
+			{Start: 9, End: 13, Label: "time-mid", Type: "time", Value: input[9:13], Description: "Timestamp (mid 16 bits)"},
+			sep(13),
+			{Start: 14, End: 15, Label: "version", Type: "version", Value: input[14:15], Description: "Version (7)"},
+			{Start: 15, End: 18, Label: "rand-a", Type: "random", Value: input[15:18], Description: "Random A (12 bits)"},
+			sep(18),
+			{Start: 19, End: 20, Label: "variant", Type: "version", Value: input[19:20], Description: "Variant (RFC 9562)"},
+			{Start: 20, End: 23, Label: "rand-b", Type: "random", Value: input[20:23], Description: "Random B (high)"},
+			sep(23),
+			{Start: 24, End: 36, Label: "rand-b-low", Type: "random", Value: input[24:36], Description: "Random B (low 48 bits)"},
+		}
+	case "8":
+		return []LayoutSegment{
+			{Start: 0, End: 8, Label: "custom-a", Type: "meta", Value: input[0:8], Description: "Custom data A (32 bits)"},
+			sep(8),
+			{Start: 9, End: 13, Label: "custom-b", Type: "meta", Value: input[9:13], Description: "Custom data B (16 bits)"},
+			sep(13),
+			{Start: 14, End: 15, Label: "version", Type: "version", Value: input[14:15], Description: "Version (8)"},
+			{Start: 15, End: 18, Label: "custom-c", Type: "meta", Value: input[15:18], Description: "Custom data C (12 bits)"},
+			sep(18),
+			{Start: 19, End: 20, Label: "variant", Type: "version", Value: input[19:20], Description: "Variant (RFC 9562)"},
+			{Start: 20, End: 23, Label: "custom-d", Type: "meta", Value: input[20:23], Description: "Custom data D (high)"},
+			sep(23),
+			{Start: 24, End: 36, Label: "custom-e", Type: "meta", Value: input[24:36], Description: "Custom data E (low 48 bits)"},
+		}
+	default:
+		return []LayoutSegment{
+			{Start: 0, End: 36, Label: "uuid", Type: "meta", Value: input, Description: fmt.Sprintf("UUID version %s", version)},
+		}
+	}
 }
 
 func variantName(nibble string) string {
@@ -156,12 +256,18 @@ func (d *ulidDetector) Detect(input string) (Match, bool) {
 	ms := decodeCrockford(input[:10])
 	ts := time.UnixMilli(int64(ms))
 
+	layout := []LayoutSegment{
+		{Start: 0, End: 10, Label: "timestamp", Type: "time", Value: input[0:10], Description: "Timestamp (ms, 48 bits)"},
+		{Start: 10, End: 26, Label: "randomness", Type: "random", Value: input[10:26], Description: "Randomness (80 bits)"},
+	}
+
 	return Match{
 		Format:     "ULID",
 		Confidence: 0.85,
 		Fields: map[string]string{
 			"timestamp": ts.UTC().Format(time.RFC3339Nano),
 		},
+		Layout: layout,
 	}, true
 }
 
@@ -210,12 +316,17 @@ func (d *nanoidDetector) Detect(input string) (Match, bool) {
 		}
 	}
 	// NanoID has lower confidence than UUID/ULID since many formats use this charset.
+	layout := []LayoutSegment{
+		{Start: 0, End: len(input), Label: "random", Type: "random", Value: input, Description: "Random bytes (URL-safe alphabet)"},
+	}
+
 	return Match{
 		Format:     "NanoID (probable)",
 		Confidence: 0.5,
 		Fields: map[string]string{
 			"length": fmt.Sprintf("%d", len(input)),
 		},
+		Layout: layout,
 	}, true
 }
 
@@ -250,6 +361,18 @@ func (d *snowflakeDetector) Detect(input string) (Match, bool) {
 		return Match{}, false
 	}
 
+	// Snowflake is a 64-bit integer; bit boundaries don't map cleanly to
+	// decimal digits. Use approximate character ranges based on typical
+	// 18-19 digit IDs.
+	tsBound := len(input) - 5 // last ~5 digits encode worker+sequence
+	if tsBound < 1 {
+		tsBound = 1
+	}
+	layout := []LayoutSegment{
+		{Start: 0, End: tsBound, Label: "timestamp-bits", Type: "time", Value: input[:tsBound], Description: "Encodes timestamp (41 bits, approximate digit range)"},
+		{Start: tsBound, End: len(input), Label: "worker-seq", Type: "meta", Value: input[tsBound:], Description: "Encodes worker ID (10 bits) and sequence (12 bits)"},
+	}
+
 	return Match{
 		Format:     "Snowflake ID",
 		Confidence: 0.7,
@@ -258,5 +381,6 @@ func (d *snowflakeDetector) Detect(input string) (Match, bool) {
 			"worker":    fmt.Sprintf("%d", worker),
 			"sequence":  fmt.Sprintf("%d", seq),
 		},
+		Layout: layout,
 	}, true
 }
