@@ -5,6 +5,8 @@ import { Sidebar } from "./components/Sidebar"
 import { GeneratorPanel } from "./components/GeneratorPanel"
 import { CommandPalette } from "./components/CommandPalette"
 import { RecommendModal } from "./components/RecommendModal"
+import { DemoBanner } from "./components/DemoBanner"
+import { PrivacyPage } from "./components/PrivacyPage"
 import { fetchVersion, fetchGenerators } from "./lib/api"
 import type { GeneratorInfo } from "./lib/types"
 
@@ -14,16 +16,25 @@ function App() {
   const [recommendOpen, setRecommendOpen] = useState(false)
   const [recommendTopic, setRecommendTopic] = useState<string | undefined>()
   const [version, setVersion] = useState<string>("")
+  const [publicMode, setPublicMode] = useState(false)
   const [generators, setGenerators] = useState<GeneratorInfo[]>([])
 
   useEffect(() => {
     fetchVersion()
-      .then((v) => setVersion(v.version))
+      .then((v) => {
+        setVersion(v.version)
+        setPublicMode(v.publicMode)
+      })
       .catch(() => {})
     fetchGenerators()
       .then(setGenerators)
       .catch(() => {})
   }, [])
+
+  // Simple pathname routing for the privacy page.
+  if (window.location.pathname === "/privacy") {
+    return <PrivacyPage />
+  }
 
   // Global Cmd+K / Ctrl+K shortcut.
   useEffect(() => {
@@ -52,6 +63,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-anvil text-foreground flex flex-col">
+      <DemoBanner visible={publicMode} onDismiss={() => {}} />
       <TopBar onPaletteOpen={() => setPaletteOpen(true)} version={version} />
       <div style={{ marginTop: 40 }}>
         <ExplainerBar onForgeAnother={(gen) => setSelected(gen)} />
@@ -60,7 +72,7 @@ function App() {
         <Sidebar selected={selected} onSelect={setSelected} />
         <main className="flex-1 ml-[220px] flex flex-col" style={{ height: "calc(100vh - 40px)" }}>
           {selected ? (
-            <GeneratorPanel address={selected} />
+            <GeneratorPanel address={selected} maxCount={publicMode ? 100 : 10000} />
           ) : (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
