@@ -237,18 +237,19 @@ func alternateForms(input, format string) map[string]string {
 	switch {
 	case strings.Contains(f, "uuid"):
 		lower := strings.ToLower(strings.TrimSpace(input))
-		hex := strings.ReplaceAll(lower, "-", "")
-		forms["hex"] = hex
+		hexStr := strings.ReplaceAll(lower, "-", "")
+		forms["hex"] = hexStr
 		forms["urn"] = "urn:uuid:" + lower
-		raw, err := decodeHex(hex)
-		if err == nil {
+		raw := hexToBytes(hexStr)
+		if raw != nil {
 			forms["base64"] = base64.StdEncoding.EncodeToString(raw)
 		}
 	case strings.Contains(f, "ulid"):
 		trimmed := strings.TrimSpace(input)
-		forms["hex"] = ulidToHex(trimmed)
-		raw, err := decodeHex(forms["hex"])
-		if err == nil {
+		hexStr := ulidToHex(trimmed)
+		forms["hex"] = hexStr
+		raw := hexToBytes(hexStr)
+		if raw != nil {
 			forms["base64"] = base64.StdEncoding.EncodeToString(raw)
 		}
 	case strings.Contains(f, "snowflake"):
@@ -267,26 +268,24 @@ func alternateForms(input, format string) map[string]string {
 	return forms
 }
 
-// decodeHex is a small wrapper around hex.DecodeString for readability.
-func decodeHex(s string) ([]byte, error) {
-	return hexDecodeString(s)
-}
-
-// hexDecodeString decodes a hex string to bytes.
-var hexDecodeString = func(s string) ([]byte, error) {
+// hexToBytes decodes a hex string to bytes, returning nil on invalid input.
+func hexToBytes(s string) []byte {
+	if len(s)%2 != 0 {
+		return nil
+	}
 	b := make([]byte, len(s)/2)
 	for i := 0; i < len(s); i += 2 {
-		hi := unhex(s[i])
-		lo := unhex(s[i+1])
+		hi := hexVal(s[i])
+		lo := hexVal(s[i+1])
 		if hi < 0 || lo < 0 {
-			return nil, fmt.Errorf("invalid hex char")
+			return nil
 		}
 		b[i/2] = byte(hi<<4 | lo)
 	}
-	return b, nil
+	return b
 }
 
-func unhex(c byte) int {
+func hexVal(c byte) int {
 	switch {
 	case c >= '0' && c <= '9':
 		return int(c - '0')
@@ -299,36 +298,28 @@ func unhex(c byte) int {
 	}
 }
 
-// ulidToHex converts a ULID (Crockford base32) to a hex string.
+// ulidToHex converts a 26-char ULID (Crockford base32) to a 32-char hex string.
 func ulidToHex(s string) string {
 	const alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 	upper := strings.ToUpper(s)
 
-	// ULID is 128 bits = 16 bytes. Decode the 26 Crockford chars.
-	var bits [128]byte
-	bitIdx := 0
+	// 26 Crockford chars encode 130 bits; top 2 must be zero, leaving 128.
+	var bits [130]byte
 	for i := 0; i < 26; i++ {
 		idx := strings.IndexByte(alphabet, upper[i])
 		if idx < 0 {
 			return ""
 		}
-		// Each char encodes 5 bits, except first encodes only 2 (total: 2 + 25*5 = 127, but spec says 128).
-		// Actually: 26 * 5 = 130 bits, top 2 bits must be zero.
-		nBits := 5
-		for b := nBits - 1; b >= 0 && bitIdx < 128; b-- {
-			if bitIdx < 2 {
-				// first 2 positions come from the top bits of the first char
-			}
+		for b := 4; b >= 0; b-- {
 			if idx&(1<<b) != 0 {
-				bits[bitIdx] = 1
+				bits[i*5+(4-b)] = 1
 			}
-			bitIdx++
 		}
 	}
 
-	// Convert bits to hex.
+	// Skip the top 2 bits and convert the remaining 128 to hex nibbles.
 	result := make([]byte, 0, 32)
-	for i := 0; i < 128; i += 4 {
+	for i := 2; i < 130; i += 4 {
 		val := bits[i]<<3 | bits[i+1]<<2 | bits[i+2]<<1 | bits[i+3]
 		if val < 10 {
 			result = append(result, '0'+val)
