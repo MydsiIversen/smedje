@@ -26,7 +26,7 @@ Examples:
   smedje recommend id
   smedje recommend id --use-case "user-facing API"
   smedje recommend ssh-key --json`,
-	Args: cobra.ExactArgs(1),
+	Args:      cobra.ExactArgs(1),
 	ValidArgs: []string{"id", "ssh-key", "tls-cert", "password", "hash", "jwt", "secret", "vpn-key"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		topic := args[0]
@@ -69,12 +69,12 @@ Examples:
 }
 
 type recommendation struct {
-	UseCase     string   `json:"use_case"`
-	Primary     string   `json:"primary"`
-	Why         string   `json:"why"`
-	Command     string   `json:"command"`
+	UseCase      string        `json:"use_case"`
+	Primary      string        `json:"primary"`
+	Why          string        `json:"why"`
+	Command      string        `json:"command"`
 	Alternatives []alternative `json:"alternatives,omitempty"`
-	Avoid       []string `json:"avoid,omitempty"`
+	Avoid        []string      `json:"avoid,omitempty"`
 }
 
 type alternative struct {

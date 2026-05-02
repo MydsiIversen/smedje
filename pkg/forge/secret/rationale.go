@@ -40,4 +40,4 @@ See also: smedje recommend secret
 `
 
 func (p *Password) Why() string { return whyPassword }
-func (t *TOTP) Why() string    { return whyTOTP }
+func (t *TOTP) Why() string     { return whyTOTP }
