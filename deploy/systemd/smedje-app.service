@@ -1,0 +1,33 @@
+[Unit]
+Description=Smedje public demo
+After=network.target
+
+[Service]
+Type=simple
+User=smedje
+Group=smedje
+WorkingDirectory=/opt/smedje
+ExecStart=/usr/local/bin/smedje serve \
+    --public \
+    --port 8080 \
+    --host 127.0.0.1 \
+    --analytics-script "https://analytics.smedje.net/script.js?id=${UMAMI_ID}" \
+    --no-browser
+Restart=always
+RestartSec=5
+EnvironmentFile=/etc/smedje/env
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RestrictSUIDSGID=yes
+PrivateDevices=yes
+ReadWritePaths=
+
+[Install]
+WantedBy=multi-user.target
