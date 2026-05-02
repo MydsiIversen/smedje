@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/smedje/smedje/internal/bench"
+	"github.com/smedje/smedje/internal/config"
 	"github.com/smedje/smedje/pkg/forge"
 )
 
@@ -37,6 +38,11 @@ func (s *Snowflake) Category() forge.Category { return forge.CategoryID }
 
 func (s *Snowflake) Generate(ctx context.Context, opts forge.Options) (*forge.Output, error) {
 	workerID := int64(0)
+	if def := config.GetDefault("snowflake.worker"); def != "" {
+		if n, err := strconv.ParseInt(def, 10, 64); err == nil && n >= 0 && n <= 1023 {
+			workerID = n
+		}
+	}
 	if w, ok := opts.Params["worker"]; ok {
 		n, err := strconv.ParseInt(w, 10, 64)
 		if err != nil || n < 0 || n > 1023 {

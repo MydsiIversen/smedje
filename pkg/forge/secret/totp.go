@@ -7,6 +7,7 @@ import (
 	"net/url"
 
 	"github.com/smedje/smedje/internal/bench"
+	"github.com/smedje/smedje/internal/config"
 	"github.com/smedje/smedje/internal/entropy"
 	"github.com/smedje/smedje/pkg/forge"
 )
@@ -40,19 +41,19 @@ func (t *TOTP) Generate(ctx context.Context, opts forge.Options) (*forge.Output,
 
 	secret := base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(secretBytes)
 
-	issuer := "Smedje"
+	issuer := config.GetDefault("totp.issuer")
 	if v, ok := opts.Params["issuer"]; ok {
 		issuer = v
 	}
-	account := "user@example.com"
+	account := config.GetDefault("totp.account")
 	if v, ok := opts.Params["account"]; ok {
 		account = v
 	}
-	digits := "6"
+	digits := config.GetDefault("totp.digits")
 	if v, ok := opts.Params["digits"]; ok {
 		digits = v
 	}
-	period := "30"
+	period := config.GetDefault("totp.period")
 	if v, ok := opts.Params["period"]; ok {
 		period = v
 	}

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/smedje/smedje/internal/bench"
+	"github.com/smedje/smedje/internal/config"
 	"github.com/smedje/smedje/internal/entropy"
 	"github.com/smedje/smedje/pkg/forge"
 )
@@ -31,12 +32,15 @@ func (s *SelfSigned) Description() string      { return "Generate a self-signed 
 func (s *SelfSigned) Category() forge.Category { return forge.CategoryCrypto }
 
 func (s *SelfSigned) Generate(ctx context.Context, opts forge.Options) (*forge.Output, error) {
-	cn := "localhost"
+	cn := config.GetDefault("tls.cn")
 	if v, ok := opts.Params["cn"]; ok {
 		cn = v
 	}
 
 	days := 365
+	if def := config.GetDefault("tls.days"); def != "" {
+		fmt.Sscanf(def, "%d", &days)
+	}
 	if v, ok := opts.Params["days"]; ok {
 		fmt.Sscanf(v, "%d", &days)
 	}

@@ -7,6 +7,7 @@ import (
 	"math/big"
 
 	"github.com/smedje/smedje/internal/bench"
+	"github.com/smedje/smedje/internal/config"
 	"github.com/smedje/smedje/internal/entropy"
 	"github.com/smedje/smedje/pkg/forge"
 )
@@ -36,6 +37,9 @@ func (p *Password) Category() forge.Category { return forge.CategorySecret }
 
 func (p *Password) Generate(ctx context.Context, opts forge.Options) (*forge.Output, error) {
 	length := 24
+	if def := config.GetDefault("password.length"); def != "" {
+		fmt.Sscanf(def, "%d", &length)
+	}
 	if v, ok := opts.Params["length"]; ok {
 		fmt.Sscanf(v, "%d", &length)
 	}
@@ -46,8 +50,16 @@ func (p *Password) Generate(ctx context.Context, opts forge.Options) (*forge.Out
 		return nil, fmt.Errorf("password: length must be <= 256, got %d", length)
 	}
 
-	charset := charsetLower + charsetUpper + charsetDigits + charsetSymbols
+	charsetName := "full"
+	if def := config.GetDefault("password.charset"); def != "" {
+		charsetName = def
+	}
 	if v, ok := opts.Params["charset"]; ok {
+		charsetName = v
+	}
+
+	charset := charsetLower + charsetUpper + charsetDigits + charsetSymbols
+	if v := charsetName; v != "full" {
 		switch v {
 		case "alpha":
 			charset = charsetLower + charsetUpper
