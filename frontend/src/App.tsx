@@ -116,15 +116,15 @@ function App() {
   return (
     <>
       <MobileMessage />
-      <div className="hidden md:flex min-h-screen bg-anvil text-foreground flex-col">
-        <DemoBanner visible={publicMode} onDismiss={() => {}} />
+      <div className="hidden md:flex h-screen bg-anvil text-foreground flex-col overflow-hidden">
         <TopBar onPaletteOpen={() => setPaletteOpen(true)} version={version} />
-        <div style={{ marginTop: 40 }}>
+        <div className="ml-[220px]" style={{ marginTop: 40 }}>
+          <DemoBanner visible={publicMode} onDismiss={() => {}} />
           <ExplainerBar onForgeAnother={(gen) => setSelected(gen)} />
         </div>
-        <div className="flex flex-1">
+        <div className="flex flex-1 min-h-0">
           <Sidebar selected={selected} onSelect={setSelected} />
-          <main className="flex-1 ml-[220px] flex flex-col" style={{ height: "calc(100vh - 40px)" }}>
+          <main className="flex-1 ml-[220px] flex flex-col min-h-0">
             {selected ? (
               <GeneratorPanel address={selected} maxCount={publicMode ? 100 : 10000} />
             ) : (
