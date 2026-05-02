@@ -31,3 +31,9 @@ coverage.html
 .DS_Store
 Thumbs.db
 CLAUDE.md
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+internal/web/dist/
+!internal/web/dist/.gitkeep
