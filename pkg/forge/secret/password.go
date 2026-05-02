@@ -88,7 +88,7 @@ func (p *Password) Generate(ctx context.Context, opts forge.Options) (*forge.Out
 }
 
 func (p *Password) Bench(ctx context.Context) (*forge.BenchResult, error) {
-	return bench.Run(ctx, p, 0)
+	return bench.RunLegacy(ctx, p, 0)
 }
 
 func randomString(length int, charset string) (string, error) {

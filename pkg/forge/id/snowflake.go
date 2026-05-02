@@ -80,5 +80,5 @@ func (s *Snowflake) Generate(ctx context.Context, opts forge.Options) (*forge.Ou
 }
 
 func (s *Snowflake) Bench(ctx context.Context) (*forge.BenchResult, error) {
-	return bench.Run(ctx, s, 0)
+	return bench.RunLegacy(ctx, s, 0)
 }

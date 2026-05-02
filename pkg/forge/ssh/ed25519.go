@@ -52,5 +52,5 @@ func (e *Ed25519) Generate(ctx context.Context, opts forge.Options) (*forge.Outp
 }
 
 func (e *Ed25519) Bench(ctx context.Context) (*forge.BenchResult, error) {
-	return bench.Run(ctx, e, 0)
+	return bench.RunLegacy(ctx, e, 0)
 }

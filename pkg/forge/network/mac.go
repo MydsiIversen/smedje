@@ -41,5 +41,5 @@ func (m *MAC) Generate(ctx context.Context, opts forge.Options) (*forge.Output, 
 }
 
 func (m *MAC) Bench(ctx context.Context) (*forge.BenchResult, error) {
-	return bench.Run(ctx, m, 0)
+	return bench.RunLegacy(ctx, m, 0)
 }

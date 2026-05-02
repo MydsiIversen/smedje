@@ -77,5 +77,5 @@ func (t *TOTP) Generate(ctx context.Context, opts forge.Options) (*forge.Output,
 }
 
 func (t *TOTP) Bench(ctx context.Context) (*forge.BenchResult, error) {
-	return bench.Run(ctx, t, 0)
+	return bench.RunLegacy(ctx, t, 0)
 }

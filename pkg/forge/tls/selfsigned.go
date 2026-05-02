@@ -108,7 +108,7 @@ func (s *SelfSigned) Generate(ctx context.Context, opts forge.Options) (*forge.O
 }
 
 func (s *SelfSigned) Bench(ctx context.Context) (*forge.BenchResult, error) {
-	return bench.Run(ctx, s, 0)
+	return bench.RunLegacy(ctx, s, 0)
 }
 
 func randBigInt(max *big.Int) (*big.Int, error) {

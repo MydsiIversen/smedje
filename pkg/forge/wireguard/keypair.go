@@ -48,5 +48,5 @@ func (k *Keypair) Generate(ctx context.Context, opts forge.Options) (*forge.Outp
 }
 
 func (k *Keypair) Bench(ctx context.Context) (*forge.BenchResult, error) {
-	return bench.Run(ctx, k, 0)
+	return bench.RunLegacy(ctx, k, 0)
 }

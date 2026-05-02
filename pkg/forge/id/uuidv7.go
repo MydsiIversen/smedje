@@ -38,7 +38,7 @@ func (u *UUIDv7) Generate(ctx context.Context, opts forge.Options) (*forge.Outpu
 }
 
 func (u *UUIDv7) Bench(ctx context.Context) (*forge.BenchResult, error) {
-	return bench.Run(ctx, u, 0)
+	return bench.RunLegacy(ctx, u, 0)
 }
 
 // newUUIDv7 builds a 128-bit UUIDv7 per RFC 9562 section 5.7:
