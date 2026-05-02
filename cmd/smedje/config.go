@@ -123,7 +123,8 @@ var configGetCmd = &cobra.Command{
 		}
 		entry, ok := cfg.GetEntry(args[0])
 		if !ok {
-			return fmt.Errorf("unknown config key: %s", args[0])
+			keys := cfg.Keys()
+			return fmt.Errorf("unknown config key: %s\n\nValid keys:\n  %s", args[0], strings.Join(keys, "\n  "))
 		}
 		fmt.Fprintln(cmd.OutOrStdout(), entry.Value)
 		return nil

@@ -176,10 +176,10 @@ func Resolve(address string) ([]Generator, error) {
 		}
 		if len(inGroup) > 0 {
 			sort.Strings(inGroup)
-			return nil, fmt.Errorf("no variant %q in group %q. Available: %s",
+			return nil, fmt.Errorf("no variant %q in group %q. Available:\n  %s\n\nRun `smedje bench list` to see all generators.",
 				variant, group, strings.Join(inGroup, ", "))
 		}
-		return nil, fmt.Errorf("no generator group %q found", group)
+		return nil, fmt.Errorf("no generator group %q found.\n\nRun `smedje bench list` to see all available generators.", group)
 	}
 
 	// Bare name: try as group.
@@ -214,7 +214,7 @@ func Resolve(address string) ([]Generator, error) {
 		return inGroup, nil
 	}
 
-	return nil, fmt.Errorf("no generator named %q found", name)
+	return nil, fmt.Errorf("no generator named %q found.\n\nRun `smedje bench list` to see all available generators.", name)
 }
 
 // Addresses returns sorted dotted addresses for all registered generators.
