@@ -40,7 +40,7 @@ func (k *Keypair) Generate(ctx context.Context, opts forge.Options) (*forge.Outp
 	}
 
 	return &forge.Output{
-		Name: "wireguard-keypair",
+		Name: "wireguard",
 		Fields: []forge.Field{
 			{Key: "private-key", Value: base64.StdEncoding.EncodeToString(priv[:]), Sensitive: true},
 			{Key: "public-key", Value: base64.StdEncoding.EncodeToString(pub)},

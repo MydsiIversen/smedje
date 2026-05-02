@@ -56,7 +56,7 @@ func (u *UUIDv6) Generate(ctx context.Context, opts forge.Options) (*forge.Outpu
 	copy(uuid[10:16], node[:])
 
 	return &forge.Output{
-		Name: "uuidv6",
+		Name: "uuid",
 		Fields: []forge.Field{
 			{Key: "value", Value: formatUUID(uuid)},
 		},

@@ -33,7 +33,7 @@ func (u *UUIDv1) Generate(ctx context.Context, opts forge.Options) (*forge.Outpu
 		return nil, err
 	}
 	return &forge.Output{
-		Name: "uuidv1",
+		Name: "uuid",
 		Fields: []forge.Field{
 			{Key: "value", Value: formatUUID(id)},
 		},

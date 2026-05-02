@@ -21,7 +21,7 @@ func (u *UUIDNil) Category() forge.Category { return forge.CategoryID }
 
 func (u *UUIDNil) Generate(ctx context.Context, opts forge.Options) (*forge.Output, error) {
 	return &forge.Output{
-		Name: "uuid-nil",
+		Name: "uuid",
 		Fields: []forge.Field{
 			{Key: "value", Value: "00000000-0000-0000-0000-000000000000"},
 		},
@@ -42,7 +42,7 @@ func (u *UUIDMax) Category() forge.Category { return forge.CategoryID }
 
 func (u *UUIDMax) Generate(ctx context.Context, opts forge.Options) (*forge.Output, error) {
 	return &forge.Output{
-		Name: "uuid-max",
+		Name: "uuid",
 		Fields: []forge.Field{
 			{Key: "value", Value: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
 		},

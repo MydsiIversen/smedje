@@ -44,7 +44,7 @@ func (e *Ed25519) Generate(ctx context.Context, opts forge.Options) (*forge.Outp
 	pubStr := string(gossh.MarshalAuthorizedKey(sshPub))
 
 	return &forge.Output{
-		Name: "ssh-ed25519",
+		Name: "ssh",
 		Fields: []forge.Field{
 			{Key: "private-key", Value: privStr, Sensitive: true},
 			{Key: "public-key", Value: pubStr},

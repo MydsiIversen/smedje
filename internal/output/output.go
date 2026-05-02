@@ -128,10 +128,15 @@ func csvBatch(w io.Writer, outputs []*forge.Output) error {
 	if len(outputs) == 0 {
 		return nil
 	}
-	// Header from first output's field keys.
+	// Header: for single-field generators use the output name (group name)
+	// as the column header; for multi-field use the field keys.
 	var headers []string
-	for _, f := range outputs[0].Fields {
-		headers = append(headers, f.Key)
+	if len(outputs[0].Fields) == 1 {
+		headers = []string{outputs[0].Name}
+	} else {
+		for _, f := range outputs[0].Fields {
+			headers = append(headers, f.Key)
+		}
 	}
 	fmt.Fprintln(w, strings.Join(headers, ","))
 

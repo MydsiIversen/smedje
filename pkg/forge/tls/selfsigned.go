@@ -100,7 +100,7 @@ func (s *SelfSigned) Generate(ctx context.Context, opts forge.Options) (*forge.O
 	keyPEM := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privBytes})
 
 	return &forge.Output{
-		Name: "tls-self-signed",
+		Name: "tls",
 		Fields: []forge.Field{
 			{Key: "certificate", Value: string(certPEM)},
 			{Key: "private-key", Value: string(keyPEM), Sensitive: true},
