@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/smedje/smedje/internal/flags"
-	"github.com/smedje/smedje/internal/output"
 	"github.com/smedje/smedje/pkg/forge"
 )
 
@@ -33,24 +32,18 @@ var totpCmd = &cobra.Command{
 		}
 
 		if flags.GetBench(cmd) {
-			result, err := g.Bench(cmd.Context())
-			if err != nil {
-				return err
-			}
-			fmt.Fprintf(cmd.OutOrStdout(), "%s: %d ops in %s (%.0f ops/sec)\n",
-				result.Generator, result.Iterations, result.Duration, result.OpsPerSec)
-			return nil
+			return runBench(cmd, g)
 		}
 
 		of := flags.GetOutputFlags(cmd)
-		count := flags.GetCount(cmd)
 		issuer, _ := cmd.Flags().GetString("issuer")
 		account, _ := cmd.Flags().GetString("account")
 		digits, _ := cmd.Flags().GetInt("digits")
 		period, _ := cmd.Flags().GetInt("period")
 
-		for i := range count {
-			out, err := g.Generate(cmd.Context(), forge.Options{
+		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
+			Generator: g,
+			Opts: forge.Options{
 				Count:  1,
 				Format: of.ResolveFormat(),
 				Params: map[string]string{
@@ -59,15 +52,10 @@ var totpCmd = &cobra.Command{
 					"digits":  fmt.Sprintf("%d", digits),
 					"period":  fmt.Sprintf("%d", period),
 				},
-			})
-			if err != nil {
-				return err
-			}
-			if err := output.Render(os.Stdout, out, of.ResolveFormat()); err != nil {
-				return err
-			}
-			_ = i
-		}
-		return nil
+			},
+			Count:  flags.GetCount(cmd),
+			Format: of.ResolveFormat(),
+			Writer: os.Stdout,
+		})
 	},
 }

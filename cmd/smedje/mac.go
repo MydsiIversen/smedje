@@ -9,7 +9,6 @@ import (
 	_ "github.com/smedje/smedje/pkg/forge/network"
 
 	"github.com/smedje/smedje/internal/flags"
-	"github.com/smedje/smedje/internal/output"
 	"github.com/smedje/smedje/pkg/forge"
 )
 
@@ -31,31 +30,16 @@ var macCmd = &cobra.Command{
 		}
 
 		if flags.GetBench(cmd) {
-			result, err := g.Bench(cmd.Context())
-			if err != nil {
-				return err
-			}
-			fmt.Fprintf(cmd.OutOrStdout(), "%s: %d ops in %s (%.0f ops/sec)\n",
-				result.Generator, result.Iterations, result.Duration, result.OpsPerSec)
-			return nil
+			return runBench(cmd, g)
 		}
 
 		of := flags.GetOutputFlags(cmd)
-		count := flags.GetCount(cmd)
-
-		for i := range count {
-			out, err := g.Generate(cmd.Context(), forge.Options{
-				Count:  1,
-				Format: of.ResolveFormat(),
-			})
-			if err != nil {
-				return err
-			}
-			if err := output.Render(os.Stdout, out, of.ResolveFormat()); err != nil {
-				return err
-			}
-			_ = i
-		}
-		return nil
+		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
+			Generator: g,
+			Opts:      forge.Options{Count: 1, Format: of.ResolveFormat()},
+			Count:     flags.GetCount(cmd),
+			Format:    of.ResolveFormat(),
+			Writer:    os.Stdout,
+		})
 	},
 }

@@ -10,7 +10,6 @@ import (
 	_ "github.com/smedje/smedje/pkg/forge/tls"
 
 	"github.com/smedje/smedje/internal/flags"
-	"github.com/smedje/smedje/internal/output"
 	"github.com/smedje/smedje/pkg/forge"
 )
 
@@ -41,17 +40,10 @@ var tlsSelfSignedCmd = &cobra.Command{
 		}
 
 		if flags.GetBench(cmd) {
-			result, err := g.Bench(cmd.Context())
-			if err != nil {
-				return err
-			}
-			fmt.Fprintf(cmd.OutOrStdout(), "%s: %d ops in %s (%.0f ops/sec)\n",
-				result.Generator, result.Iterations, result.Duration, result.OpsPerSec)
-			return nil
+			return runBench(cmd, g)
 		}
 
 		of := flags.GetOutputFlags(cmd)
-		count := flags.GetCount(cmd)
 		cn, _ := cmd.Flags().GetString("cn")
 		days, _ := cmd.Flags().GetInt("days")
 		sans, _ := cmd.Flags().GetStringSlice("san")
@@ -64,20 +56,16 @@ var tlsSelfSignedCmd = &cobra.Command{
 			params["san"] = strings.Join(sans, ",")
 		}
 
-		for i := range count {
-			out, err := g.Generate(cmd.Context(), forge.Options{
+		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
+			Generator: g,
+			Opts: forge.Options{
 				Count:  1,
 				Format: of.ResolveFormat(),
 				Params: params,
-			})
-			if err != nil {
-				return err
-			}
-			if err := output.Render(os.Stdout, out, of.ResolveFormat()); err != nil {
-				return err
-			}
-			_ = i
-		}
-		return nil
+			},
+			Count:  flags.GetCount(cmd),
+			Format: of.ResolveFormat(),
+			Writer: os.Stdout,
+		})
 	},
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/smedje/smedje/internal/flags"
-	"github.com/smedje/smedje/internal/output"
 	"github.com/smedje/smedje/pkg/forge"
 )
 
@@ -30,35 +29,22 @@ var snowflakeCmd = &cobra.Command{
 		}
 
 		if flags.GetBench(cmd) {
-			result, err := g.Bench(cmd.Context())
-			if err != nil {
-				return err
-			}
-			fmt.Fprintf(cmd.OutOrStdout(), "%s: %d ops in %s (%.0f ops/sec)\n",
-				result.Generator, result.Iterations, result.Duration, result.OpsPerSec)
-			return nil
+			return runBench(cmd, g)
 		}
 
 		of := flags.GetOutputFlags(cmd)
-		count := flags.GetCount(cmd)
 		worker, _ := cmd.Flags().GetInt("worker")
 
-		for i := range count {
-			out, err := g.Generate(cmd.Context(), forge.Options{
+		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
+			Generator: g,
+			Opts: forge.Options{
 				Count:  1,
 				Format: of.ResolveFormat(),
-				Params: map[string]string{
-					"worker": fmt.Sprintf("%d", worker),
-				},
-			})
-			if err != nil {
-				return err
-			}
-			if err := output.Render(os.Stdout, out, of.ResolveFormat()); err != nil {
-				return err
-			}
-			_ = i
-		}
-		return nil
+				Params: map[string]string{"worker": fmt.Sprintf("%d", worker)},
+			},
+			Count:  flags.GetCount(cmd),
+			Format: of.ResolveFormat(),
+			Writer: os.Stdout,
+		})
 	},
 }

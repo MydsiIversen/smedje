@@ -82,3 +82,113 @@ func Render(w io.Writer, o *forge.Output, format string) error {
 		return Text(w, o)
 	}
 }
+
+// RenderBatch renders multiple outputs in the appropriate batch format.
+// JSON wraps in an array; CSV adds a header row; SQL produces INSERT statements.
+func RenderBatch(w io.Writer, outputs []*forge.Output, format string, opts BatchOptions) error {
+	switch format {
+	case "json":
+		return jsonBatch(w, outputs)
+	case "csv":
+		return csvBatch(w, outputs)
+	case "sql":
+		return sqlBatch(w, outputs, opts.SQLTable)
+	case "env":
+		return envBatch(w, outputs)
+	default:
+		for _, o := range outputs {
+			if err := Render(w, o, format); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
+// BatchOptions controls batch rendering behavior.
+type BatchOptions struct {
+	SQLTable string
+}
+
+func jsonBatch(w io.Writer, outputs []*forge.Output) error {
+	items := make([]map[string]string, 0, len(outputs))
+	for _, o := range outputs {
+		m := make(map[string]string, len(o.Fields))
+		for _, f := range o.Fields {
+			m[f.Key] = f.Value
+		}
+		items = append(items, m)
+	}
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	return enc.Encode(items)
+}
+
+func csvBatch(w io.Writer, outputs []*forge.Output) error {
+	if len(outputs) == 0 {
+		return nil
+	}
+	// Header from first output's field keys.
+	var headers []string
+	for _, f := range outputs[0].Fields {
+		headers = append(headers, f.Key)
+	}
+	fmt.Fprintln(w, strings.Join(headers, ","))
+
+	for _, o := range outputs {
+		var vals []string
+		for _, f := range o.Fields {
+			vals = append(vals, csvEscape(f.Value))
+		}
+		fmt.Fprintln(w, strings.Join(vals, ","))
+	}
+	return nil
+}
+
+func csvEscape(s string) string {
+	if strings.ContainsAny(s, ",\"\n") {
+		return `"` + strings.ReplaceAll(s, `"`, `""`) + `"`
+	}
+	return s
+}
+
+func sqlBatch(w io.Writer, outputs []*forge.Output, table string) error {
+	if len(outputs) == 0 {
+		return nil
+	}
+	if table == "" {
+		table = outputs[0].Name
+	}
+
+	var cols []string
+	for _, f := range outputs[0].Fields {
+		cols = append(cols, f.Key)
+	}
+
+	fmt.Fprintf(w, "INSERT INTO %s (%s) VALUES\n", table, strings.Join(cols, ", "))
+	for i, o := range outputs {
+		var vals []string
+		for _, f := range o.Fields {
+			vals = append(vals, "'"+strings.ReplaceAll(f.Value, "'", "''")+"'")
+		}
+		sep := ","
+		if i == len(outputs)-1 {
+			sep = ";"
+		}
+		fmt.Fprintf(w, "  (%s)%s\n", strings.Join(vals, ", "), sep)
+	}
+	return nil
+}
+
+func envBatch(w io.Writer, outputs []*forge.Output) error {
+	for i, o := range outputs {
+		prefix := fmt.Sprintf("%s_%d", strings.ToUpper(o.Name), i+1)
+		prefix = strings.ReplaceAll(prefix, "-", "_")
+		for _, f := range o.Fields {
+			key := prefix + "_" + strings.ToUpper(f.Key)
+			key = strings.ReplaceAll(key, "-", "_")
+			fmt.Fprintf(w, "%s=%s\n", key, f.Value)
+		}
+	}
+	return nil
+}
