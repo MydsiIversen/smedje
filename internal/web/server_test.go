@@ -246,3 +246,78 @@ func TestCryptoGeneratorSeedFalse(t *testing.T) {
 		t.Error("crypto generator ssh.ed25519 should not support seed")
 	}
 }
+
+func TestPrivacyPage(t *testing.T) {
+	s := testServer()
+	req := httptest.NewRequest(http.MethodGet, "/privacy", nil)
+	w := httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+
+	ct := w.Header().Get("Content-Type")
+	if ct != "text/html; charset=utf-8" {
+		t.Errorf("expected text/html content type, got %q", ct)
+	}
+
+	body := w.Body.String()
+	for _, want := range []string{
+		"Privacy",
+		"Your data stays in your browser",
+		"analytics.smedje.net",
+		"No cookies",
+		"Do Not Track",
+		"github.com/MydsiIversen/smedje",
+		"Back to Smedje",
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("privacy page missing expected text: %q", want)
+		}
+	}
+}
+
+func TestAnalyticsTagParsing(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		want   string
+		wantOK bool
+	}{
+		{
+			name:   "valid script URL",
+			input:  "https://analytics.smedje.net/script.js?id=abc-123",
+			want:   `<script defer data-website-id="abc-123" src="https://analytics.smedje.net/script.js"></script>`,
+			wantOK: true,
+		},
+		{
+			name:   "empty string",
+			input:  "",
+			want:   "",
+			wantOK: false,
+		},
+		{
+			name:   "no id param",
+			input:  "https://analytics.smedje.net/script.js",
+			want:   "",
+			wantOK: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := DefaultConfig()
+			cfg.AnalyticsScript = tt.input
+			s := &Server{cfg: cfg}
+
+			got := s.analyticsTag()
+			if tt.wantOK && got != tt.want {
+				t.Errorf("analyticsTag() = %q, want %q", got, tt.want)
+			}
+			if !tt.wantOK && got != "" {
+				t.Errorf("analyticsTag() = %q, want empty", got)
+			}
+		})
+	}
+}

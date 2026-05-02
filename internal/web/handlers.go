@@ -410,12 +410,109 @@ func (s *Server) handleHealthz(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
-// handlePrivacy is a placeholder for the privacy page (Task 4).
+// handlePrivacy renders a standalone HTML privacy page explaining what
+// data Smedje does and does not collect.
 func (s *Server) handlePrivacy(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]string{
-		"message": "Privacy policy placeholder. Nothing is collected.",
-	})
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, privacyHTML)
 }
+
+const privacyHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy — Smedje</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0A0B0E;
+    color: #E8E6E1;
+    font-family: 'Geist', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    padding: 2rem 1rem;
+  }
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  a { color: #E2683A; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .back { display: inline-block; margin-bottom: 2rem; color: #6B6E78; }
+  .back:hover { color: #E8E6E1; }
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+  }
+  .panel {
+    background: #13151A;
+    border: 1px solid #1F222A;
+    border-radius: 0px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #E2683A;
+  }
+  p { margin-bottom: 0.75rem; color: #E8E6E1; }
+  p:last-child { margin-bottom: 0; }
+  code {
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    background: #1F222A;
+    padding: 0.15em 0.35em;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  .muted { color: #6B6E78; }
+</style>
+</head>
+<body>
+<main>
+  <a href="/" class="back">&larr; Back to Smedje</a>
+  <h1>Privacy</h1>
+
+  <div class="panel">
+    <h2>Your data stays in your browser</h2>
+    <p>Every value Smedje generates — UUIDs, keys, passwords, certificates —
+    is created entirely in your browser or on your local machine. Generated
+    values are never transmitted to any server. There is no backend database,
+    no telemetry endpoint, and no server-side logging of generated output.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Analytics</h2>
+    <p>Smedje tracks aggregate page views and popular generators using a
+    self-hosted <a href="https://umami.is">Umami</a> instance at
+    <code>analytics.smedje.net</code>. Umami is open-source, privacy-focused
+    analytics software.</p>
+    <p>This means:</p>
+    <p>— No cookies are set. Ever.<br>
+    — No fingerprinting or cross-site tracking.<br>
+    — No personally identifiable information (PII) is collected.<br>
+    — IP addresses are not stored.<br>
+    — The <code>DNT</code> (Do Not Track) header is honored. If your browser
+    sends it, no analytics data is recorded for your visit.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Source code</h2>
+    <p>Smedje is open source. You can inspect exactly what the application
+    does — including this privacy policy — in the repository:
+    <a href="https://github.com/MydsiIversen/smedje">github.com/MydsiIversen/smedje</a>.</p>
+  </div>
+
+  <p class="muted" style="margin-top: 1rem; text-align: center;">
+    That&rsquo;s it. No legalese, no dark patterns, no surprises.
+  </p>
+</main>
+</body>
+</html>`
 
 // outputToArtifact converts a forge.Output to an sseArtifact.
 func outputToArtifact(out *forge.Output) sseArtifact {
