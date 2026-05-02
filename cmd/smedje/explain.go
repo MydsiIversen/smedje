@@ -31,7 +31,7 @@ var explainCmd = &cobra.Command{
 			fmt.Fprintf(cmd.OutOrStdout(), "  %s: %s\n", k, v)
 		}
 		fmt.Fprintln(cmd.OutOrStdout())
-		fmt.Fprintln(cmd.OutOrStdout(), "Hint: try smedje id compare <this-format> <other-format>")
+		fmt.Fprintln(cmd.OutOrStdout(), "Run `smedje recommend id` for guidance on which ID format to use.")
 		return nil
 	},
 }

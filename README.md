@@ -40,14 +40,25 @@ smedje explain "019dea33-4e8a-7585-ad4d-6a3232718cb3"
 # → Format: UUIDv7 (Unix time-ordered)
 #     timestamp: 2026-05-02T...
 
+# Recommendations
+smedje recommend id            # opinionated ID format advice
+smedje recommend ssh-key       # which key type for which job
+
+# Explain why
+smedje uuid v7 --why           # generate + rationale + alternatives
+
+# Reproducible output
+smedje uuid v7 --seed test --count 5  # same seed = same output
+
 # Benchmarks
 smedje bench all               # benchmark every generator
-smedje bench compare v7 ulid   # side-by-side comparison
+smedje bench compare uuid.v7 ulid nanoid  # side-by-side comparison
+smedje bench list              # show all addressable generator names
 
 # Output modes
 smedje uuid v7 --json          # {"value": "..."}
 smedje uuid v7 --quiet         # raw value only
-smedje uuid v7 --format env    # UUIDV7_VALUE=...
+smedje uuid v7 --format env    # UUID_1_VALUE=...
 ```
 
 ## What it forges
@@ -92,6 +103,14 @@ smedje config show --explain
 ```
 
 See [docs/configuration.md](docs/configuration.md) for full details.
+
+## Documentation
+
+- [docs/cli-conventions.md](docs/cli-conventions.md) — naming, addressing, flag patterns
+- [docs/configuration.md](docs/configuration.md) — precedence, file locations, env naming
+- [docs/defaults.md](docs/defaults.md) — all defaults with rationale
+- [docs/output-formats.md](docs/output-formats.md) — format conventions per output mode
+- [docs/recommendations.md](docs/recommendations.md) — opinionated guidance
 
 ## Install
 
