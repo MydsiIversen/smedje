@@ -11,7 +11,7 @@ var Defaults = map[string]string{
 	"totp.period":  "30",
 
 	"tls.cn":   "localhost",
-	"tls.days": "365",
+	"tls.days": "825",
 
 	"snowflake.worker": "0",
 

@@ -18,7 +18,7 @@ func init() {
 	tlsCmd.AddCommand(tlsSelfSignedCmd)
 
 	tlsSelfSignedCmd.Flags().String("cn", "localhost", "Common name for the certificate")
-	tlsSelfSignedCmd.Flags().Int("days", 365, "Certificate validity in days")
+	tlsSelfSignedCmd.Flags().Int("days", 825, "Certificate validity in days")
 	tlsSelfSignedCmd.Flags().StringSlice("san", nil, "Subject alternative names (DNS or IP)")
 	flags.AddOutputFlags(tlsSelfSignedCmd)
 	flags.AddBulkFlags(tlsSelfSignedCmd)

@@ -12,7 +12,7 @@ variable, or CLI flag.
 | `totp.digits` | `6` | Industry standard per RFC 6238; most authenticator apps expect 6 |
 | `totp.period` | `30` | 30-second window is the de facto standard |
 | `tls.cn` | `localhost` | Safe default for local dev; override for real certs |
-| `tls.days` | `365` | One year; matches Let's Encrypt renewal mental model |
+| `tls.days` | `825` | Apple maximum for locally-trusted certs; avoids annual regeneration |
 | `snowflake.worker` | `0` | Single-instance default; set per-machine in production |
 | `mac.format` | `colon` | Most common human-readable format (aa:bb:cc:dd:ee:ff) |
 | `nanoid.length` | `21` | Standard NanoID length providing ~126 bits of entropy |
