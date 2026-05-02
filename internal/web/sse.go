@@ -53,14 +53,16 @@ type sseProgress struct {
 
 // sseArtifact is the data shape for "artifact" events.
 type sseArtifact struct {
-	Value  string            `json:"value"`
-	Fields map[string]string `json:"fields"`
+	Value     string            `json:"value"`
+	Fields    map[string]string `json:"fields"`
+	Formatted string            `json:"formatted,omitempty"`
 }
 
 // sseDone is the data shape for "done" events.
 type sseDone struct {
-	DurationMs int64 `json:"durationMs"`
-	Count      int   `json:"count"`
+	DurationMs int64  `json:"durationMs"`
+	Count      int    `json:"count"`
+	Formatted  string `json:"formatted,omitempty"`
 }
 
 // sseError is the data shape for "error" events.

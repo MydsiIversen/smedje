@@ -111,7 +111,7 @@ export async function generateSingle(
   params: Record<string, string>,
   format: string,
   seed: string,
-): Promise<{ value: string; fields: Record<string, string> }> {
+): Promise<{ value: string; fields: Record<string, string>; formatted?: string }> {
   const res = await fetch(`${BASE}/api/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

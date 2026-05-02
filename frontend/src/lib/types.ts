@@ -87,6 +87,7 @@ export interface SSEDoneEvent {
   type: "done"
   durationMs: number
   count: number
+  formatted?: string
 }
 
 export interface SSEErrorEvent {

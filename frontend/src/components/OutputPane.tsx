@@ -13,6 +13,7 @@ interface OutputPaneProps {
   schema: GeneratorSchema
   onCopyAll: () => void
   durationMs: number | null
+  formatted?: string | null
 }
 
 /** True if the artifact has multiple named fields beyond just "value". */
@@ -29,6 +30,7 @@ export function OutputPane({
   status,
   onCopyAll,
   durationMs,
+  formatted,
 }: OutputPaneProps) {
   const [copied, setCopied] = useState(false)
   const showPreview = !forging && results.length === 0 && preview !== null
@@ -88,8 +90,17 @@ export function OutputPane({
         </div>
       )}
 
-      {/* Forge results */}
-      {showResults && (
+      {/* Formatted batch output (SQL, CSV, JSON, env) */}
+      {showResults && formatted && !forging && (
+        <div className="flex-1 overflow-y-auto">
+          <pre className="font-mono text-sm text-foreground whitespace-pre-wrap break-all m-0">
+            {formatted}
+          </pre>
+        </div>
+      )}
+
+      {/* Forge results (individual artifacts) */}
+      {showResults && !formatted && (
         <div className="flex-1 overflow-y-auto space-y-2">
           <Stagger>
             {results.map((artifact, i) => (

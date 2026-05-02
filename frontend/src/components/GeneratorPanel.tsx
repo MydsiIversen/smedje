@@ -27,6 +27,7 @@ export function GeneratorPanel({ address, maxCount }: GeneratorPanelProps) {
     opsPerSec: number
   } | null>(null)
   const [durationMs, setDurationMs] = useState<number | null>(null)
+  const [formatted, setFormatted] = useState<string | null>(null)
   const [toastVisible, setToastVisible] = useState(false)
   const [rationaleOpen, setRationaleOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -44,6 +45,7 @@ export function GeneratorPanel({ address, maxCount }: GeneratorPanelProps) {
     setStatus("")
     setProgress(null)
     setDurationMs(null)
+    setFormatted(null)
     setRationaleOpen(false)
 
     fetchGeneratorSchema(address)
@@ -86,12 +88,14 @@ export function GeneratorPanel({ address, maxCount }: GeneratorPanelProps) {
     setStatus("")
     setProgress(null)
     setDurationMs(null)
+    setFormatted(null)
     setError(null)
 
     if (count <= 1) {
       generateSingle(schema.address, params, format, seed)
         .then((result) => {
           setResults([{ value: result.value, fields: result.fields }])
+          if (result.formatted) setFormatted(result.formatted)
           setForging(false)
           showForgeDone()
         })
@@ -120,6 +124,7 @@ export function GeneratorPanel({ address, maxCount }: GeneratorPanelProps) {
           break
         case "done":
           setDurationMs(event.durationMs)
+          if (event.formatted) setFormatted(event.formatted)
           setForging(false)
           showForgeDone()
           break
@@ -143,7 +148,7 @@ export function GeneratorPanel({ address, maxCount }: GeneratorPanelProps) {
   }
 
   function handleCopyAll() {
-    const text = results.map((a) => a.value).join("\n")
+    const text = formatted || results.map((a) => a.value).join("\n")
     navigator.clipboard.writeText(text)
   }
 
@@ -164,7 +169,7 @@ export function GeneratorPanel({ address, maxCount }: GeneratorPanelProps) {
   }
 
   return (
-    <Reveal>
+    <Reveal className="flex-1 min-h-0 flex flex-col">
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="px-6 py-4 border-b border-border">
@@ -222,6 +227,7 @@ export function GeneratorPanel({ address, maxCount }: GeneratorPanelProps) {
               schema={schema}
               onCopyAll={handleCopyAll}
               durationMs={durationMs}
+              formatted={formatted}
             />
           </div>
         </div>

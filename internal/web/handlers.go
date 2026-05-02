@@ -12,6 +12,7 @@ import (
 
 	"github.com/smedje/smedje/internal/entropy"
 	"github.com/smedje/smedje/internal/explain"
+	"github.com/smedje/smedje/internal/output"
 	"github.com/smedje/smedje/internal/recommend"
 	"github.com/smedje/smedje/pkg/forge"
 )
@@ -107,7 +108,15 @@ func (s *Server) handleGenerate(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		writeJSON(w, http.StatusOK, outputToArtifact(out))
+		artifact := outputToArtifact(out)
+		if isBatchFormat(req.Format) {
+			var buf strings.Builder
+			output.RenderBatch(&buf, []*forge.Output{out}, req.Format, output.BatchOptions{
+				SQLTable: req.Generator,
+			})
+			artifact.Formatted = buf.String()
+		}
+		writeJSON(w, http.StatusOK, artifact)
 		return
 	}
 
@@ -124,6 +133,10 @@ func (s *Server) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		Message: "generating " + req.Generator,
 	})
 
+	const maxBatchFormat = 10000
+	collectForBatch := isBatchFormat(req.Format) && count <= maxBatchFormat
+	var outputs []*forge.Output
+
 	start := time.Now()
 	for i := 0; i < count; i++ {
 		select {
@@ -139,6 +152,9 @@ func (s *Server) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		}
 
 		_ = sse.writeEvent("artifact", outputToArtifact(out))
+		if collectForBatch {
+			outputs = append(outputs, out)
+		}
 
 		// Send progress every 100 items or on the last item.
 		if (i+1)%100 == 0 || i == count-1 {
@@ -155,10 +171,18 @@ func (s *Server) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	_ = sse.writeEvent("done", sseDone{
+	done := sseDone{
 		DurationMs: time.Since(start).Milliseconds(),
 		Count:      count,
-	})
+	}
+	if collectForBatch && len(outputs) > 0 {
+		var buf strings.Builder
+		output.RenderBatch(&buf, outputs, req.Format, output.BatchOptions{
+			SQLTable: req.Generator,
+		})
+		done.Formatted = buf.String()
+	}
+	_ = sse.writeEvent("done", done)
 }
 
 // handleExplain identifies and decodes a value.
@@ -513,6 +537,16 @@ const privacyHTML = `<!DOCTYPE html>
 </main>
 </body>
 </html>`
+
+// isBatchFormat returns true for formats that produce structured batch output
+// (SQL, CSV, JSON array, env vars) rather than plain text.
+func isBatchFormat(format string) bool {
+	switch format {
+	case "csv", "sql", "env", "json":
+		return true
+	}
+	return false
+}
 
 // outputToArtifact converts a forge.Output to an sseArtifact.
 func outputToArtifact(out *forge.Output) sseArtifact {
