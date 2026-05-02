@@ -1,7 +1,6 @@
 package web
 
 import (
-	"embed"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -10,9 +9,6 @@ import (
 	"strings"
 	"time"
 )
-
-//go:embed all:dist
-var distFS embed.FS
 
 // ServerConfig holds the configuration for the HTTP server.
 type ServerConfig struct {
@@ -160,12 +156,21 @@ func (s *Server) devProxy() http.Handler {
 // embeddedFS serves static files from the embedded dist directory with SPA
 // fallback: if a file is not found, serve index.html.
 func (s *Server) embeddedFS() http.Handler {
-	sub, err := fs.Sub(distFS, "dist")
+	sub, err := fs.Sub(frontendFS, "dist")
 	if err != nil {
 		// Should never happen with a valid embed directive.
 		panic("web: embedded dist fs: " + err.Error())
 	}
 	fileServer := http.FileServer(http.FS(sub))
+
+	// Pre-build the injected index.html once at startup if analytics is configured.
+	var injectedIndex []byte
+	if tag := s.analyticsTag(); tag != "" {
+		raw, err := fs.ReadFile(sub, "index.html")
+		if err == nil {
+			injectedIndex = []byte(strings.Replace(string(raw), "</head>", tag+"\n</head>", 1))
+		}
+	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Try to open the file. If it doesn't exist, serve index.html
@@ -179,8 +184,45 @@ func (s *Server) embeddedFS() http.Handler {
 
 		if _, err := fs.Stat(sub, path); err != nil {
 			// SPA fallback: serve index.html.
+			path = "index.html"
 			r.URL.Path = "/"
 		}
+
+		// Serve the injected index.html if analytics is configured.
+		if path == "index.html" && injectedIndex != nil {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write(injectedIndex)
+			return
+		}
+
 		fileServer.ServeHTTP(w, r)
 	})
+}
+
+// analyticsTag parses the --analytics-script flag value and returns a
+// <script> tag suitable for injection before </head>. Returns empty
+// string if the flag is unset or malformed.
+func (s *Server) analyticsTag() string {
+	raw := s.cfg.AnalyticsScript
+	if raw == "" {
+		return ""
+	}
+
+	u, err := url.Parse(raw)
+	if err != nil {
+		return ""
+	}
+
+	websiteID := u.Query().Get("id")
+	if websiteID == "" {
+		return ""
+	}
+
+	// Reconstruct the script src without the id query param.
+	q := u.Query()
+	q.Del("id")
+	u.RawQuery = q.Encode()
+	src := u.String()
+
+	return `<script defer data-website-id="` + websiteID + `" src="` + src + `"></script>`
 }
