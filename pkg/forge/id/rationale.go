@@ -99,10 +99,65 @@ When to use:
   end-of-range marker. Never use as a generated identifier.
 `
 
-func (u *UUIDv7) Why() string { return whyUUIDv7 }
-func (u *UUIDv4) Why() string { return whyUUIDv4 }
-func (u *UUIDv1) Why() string { return whyUUIDv1 }
-func (u *UUIDv6) Why() string { return whyUUIDv6 }
-func (u *UUIDv8) Why() string { return whyUUIDv8 }
-func (u *UUIDNil) Why() string { return whyUUIDNil }
-func (u *UUIDMax) Why() string { return whyUUIDMax }
+const whyULID = `About ULID (github.com/ulid/spec):
+  26-character Crockford Base32 identifier. 48-bit millisecond
+  timestamp prefix + 80 bits of randomness. Lexicographically
+  sortable, URL-safe, case-insensitive.
+
+Why use it:
+  When you need time-sortable IDs that are shorter than UUIDs (26
+  chars vs 36) and case-insensitive. Popular in systems that pass
+  IDs in URLs or where the shorter representation matters.
+
+Alternatives:
+  uuid.v7     standard UUID format, wider ecosystem support
+  nanoid      even shorter if you don't need time-sorting
+
+See also: smedje recommend id
+`
+
+const whyNanoID = `About NanoID:
+  URL-safe random identifier with configurable length and alphabet.
+  Default: 21 characters from A-Za-z0-9_- providing ~126 bits of
+  entropy. Uses crypto/rand with rejection sampling for uniform
+  distribution.
+
+Why use it:
+  When you need short, URL-safe, random identifiers. Good for
+  user-facing IDs, session tokens, and URL slugs. The custom
+  alphabet option lets you exclude ambiguous characters.
+
+Alternatives:
+  uuid.v4     128-bit, standard format, wider recognition
+  ulid        time-sortable if ordering matters
+
+See also: smedje recommend id
+`
+
+const whySnowflake = `About Snowflake (Twitter, 2010):
+  64-bit integer ID: 41 bits timestamp (ms since epoch) + 10 bits
+  worker ID + 12 bits sequence. Fits in a signed int64. Ordered
+  within the same worker. Epoch: 2024-01-01T00:00:00Z.
+
+Why use it:
+  When you need compact 64-bit integer IDs that embed a timestamp.
+  Natural fit for databases with int64 primary keys and distributed
+  systems with worker-based sharding.
+
+Alternatives:
+  uuid.v7     128-bit, standard UUID format, no worker coordination
+  ulid        128-bit, no worker ID needed, base32 encoded
+
+See also: smedje recommend id
+`
+
+func (u *UUIDv7) Why() string    { return whyUUIDv7 }
+func (u *UUIDv4) Why() string    { return whyUUIDv4 }
+func (u *UUIDv1) Why() string    { return whyUUIDv1 }
+func (u *UUIDv6) Why() string    { return whyUUIDv6 }
+func (u *UUIDv8) Why() string    { return whyUUIDv8 }
+func (u *UUIDNil) Why() string   { return whyUUIDNil }
+func (u *UUIDMax) Why() string   { return whyUUIDMax }
+func (u *ULID) Why() string      { return whyULID }
+func (n *NanoID) Why() string    { return whyNanoID }
+func (s *Snowflake) Why() string { return whySnowflake }

@@ -19,6 +19,7 @@ func init() {
 	flags.AddBulkFlags(nanoidCmd)
 	flags.AddBenchFlag(nanoidCmd)
 	flags.AddSeedFlags(nanoidCmd)
+	flags.AddWhyFlag(nanoidCmd)
 }
 
 var nanoidCmd = &cobra.Command{
@@ -48,6 +49,11 @@ var nanoidCmd = &cobra.Command{
 		}
 
 		opts := forge.Options{Count: 1, Format: of.ResolveFormat(), Params: params, Time: timeFn}
+
+		if handled, err := flags.RunWhy(cmd, g, opts); handled {
+			return err
+		}
+
 		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
 			Generator: g,
 			Opts:      opts,

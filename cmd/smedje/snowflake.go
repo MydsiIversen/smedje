@@ -18,6 +18,7 @@ func init() {
 	flags.AddBulkFlags(snowflakeCmd)
 	flags.AddBenchFlag(snowflakeCmd)
 	flags.AddSeedFlags(snowflakeCmd)
+	flags.AddWhyFlag(snowflakeCmd)
 }
 
 var snowflakeCmd = &cobra.Command{
@@ -44,6 +45,11 @@ var snowflakeCmd = &cobra.Command{
 			Params: map[string]string{"worker": fmt.Sprintf("%d", worker)},
 			Time:   timeFn,
 		}
+
+		if handled, err := flags.RunWhy(cmd, g, opts); handled {
+			return err
+		}
+
 		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
 			Generator: g,
 			Opts:      opts,
