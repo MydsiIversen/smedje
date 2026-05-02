@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { TopBar } from "./components/TopBar"
 import { Sidebar } from "./components/Sidebar"
+import { GeneratorPanel } from "./components/GeneratorPanel"
 import { fetchVersion } from "./lib/api"
 
 function App() {
@@ -19,14 +20,9 @@ function App() {
       <TopBar onPaletteOpen={() => setPaletteOpen(true)} version={version} />
       <div className="flex flex-1" style={{ marginTop: 40 }}>
         <Sidebar selected={selected} onSelect={setSelected} />
-        <main className="flex-1 ml-[220px]">
+        <main className="flex-1 ml-[220px] flex flex-col" style={{ height: "calc(100vh - 40px)" }}>
           {selected ? (
-            <div className="p-6">
-              <p className="font-mono text-lg">{selected}</p>
-              <p className="text-muted-foreground text-sm mt-1">
-                Generator panel will go here
-              </p>
-            </div>
+            <GeneratorPanel address={selected} />
           ) : (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
