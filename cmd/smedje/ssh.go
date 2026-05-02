@@ -19,6 +19,7 @@ func init() {
 	flags.AddOutputFlags(sshEd25519Cmd)
 	flags.AddBulkFlags(sshEd25519Cmd)
 	flags.AddBenchFlag(sshEd25519Cmd)
+	flags.AddWhyFlag(sshEd25519Cmd)
 }
 
 var sshCmd = &cobra.Command{
@@ -40,9 +41,15 @@ var sshEd25519Cmd = &cobra.Command{
 		}
 
 		of := flags.GetOutputFlags(cmd)
+		opts := forge.Options{Count: 1, Format: of.ResolveFormat()}
+
+		if handled, err := flags.RunWhy(cmd, g, opts); handled {
+			return err
+		}
+
 		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
 			Generator: g,
-			Opts:      forge.Options{Count: 1, Format: of.ResolveFormat()},
+			Opts:      opts,
 			Count:     flags.GetCount(cmd),
 			Format:    of.ResolveFormat(),
 			Writer:    os.Stdout,

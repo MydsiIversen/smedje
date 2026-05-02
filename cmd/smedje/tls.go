@@ -23,6 +23,7 @@ func init() {
 	flags.AddOutputFlags(tlsSelfSignedCmd)
 	flags.AddBulkFlags(tlsSelfSignedCmd)
 	flags.AddBenchFlag(tlsSelfSignedCmd)
+	flags.AddWhyFlag(tlsSelfSignedCmd)
 }
 
 var tlsCmd = &cobra.Command{
@@ -56,16 +57,17 @@ var tlsSelfSignedCmd = &cobra.Command{
 			params["san"] = strings.Join(sans, ",")
 		}
 
+		opts := forge.Options{Count: 1, Format: of.ResolveFormat(), Params: params}
+		if handled, err := flags.RunWhy(cmd, g, opts); handled {
+			return err
+		}
+
 		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
 			Generator: g,
-			Opts: forge.Options{
-				Count:  1,
-				Format: of.ResolveFormat(),
-				Params: params,
-			},
-			Count:  flags.GetCount(cmd),
-			Format: of.ResolveFormat(),
-			Writer: os.Stdout,
+			Opts:      opts,
+			Count:     flags.GetCount(cmd),
+			Format:    of.ResolveFormat(),
+			Writer:    os.Stdout,
 		})
 	},
 }
