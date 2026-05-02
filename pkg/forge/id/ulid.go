@@ -19,6 +19,7 @@ func init() {
 type ULID struct{}
 
 func (u *ULID) Name() string             { return "ulid" }
+func (u *ULID) Group() string            { return "ulid" }
 func (u *ULID) Description() string      { return "Generate a ULID (Crockford Base32, time-sortable)" }
 func (u *ULID) Category() forge.Category { return forge.CategoryID }
 

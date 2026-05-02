@@ -18,6 +18,7 @@ func init() {
 	rootCmd.AddCommand(benchCmd)
 	benchCmd.AddCommand(benchAllCmd)
 	benchCmd.AddCommand(benchCompareCmd)
+	benchCmd.AddCommand(benchListCmd)
 
 	for _, cmd := range []*cobra.Command{benchCmd, benchAllCmd, benchCompareCmd} {
 		cmd.Flags().Duration("duration", 2*time.Second, "Benchmark duration per generator")
@@ -38,9 +39,9 @@ var benchCmd = &cobra.Command{
 			return cmd.Help()
 		}
 
-		generators := findGenerators(args[0])
-		if len(generators) == 0 {
-			return fmt.Errorf("no generators matching %q", args[0])
+		generators, err := resolveGenerators(args[0])
+		if err != nil {
+			return err
 		}
 
 		opts := benchOptsFromCmd(cmd)
@@ -72,9 +73,9 @@ var benchCompareCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var generators []forge.Generator
 		for _, name := range args {
-			found := findGenerators(name)
-			if len(found) == 0 {
-				return fmt.Errorf("no generators matching %q", name)
+			found, err := resolveGenerators(name)
+			if err != nil {
+				return err
 			}
 			generators = append(generators, found...)
 		}
@@ -96,38 +97,29 @@ func benchOptsFromCmd(cmd *cobra.Command) bench.Options {
 	return bench.Options{Duration: d, Warmup: w, Repeat: r, Cores: c}
 }
 
-func findGenerators(pattern string) []forge.Generator {
-	// Try exact match by category/name
-	parts := strings.SplitN(pattern, ".", 2)
-	if len(parts) == 2 {
-		if g, ok := forge.Get(forge.Category(parts[0]), parts[1]); ok {
-			return []forge.Generator{g}
+var benchListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all addressable generator names",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		for _, addr := range forge.Addresses() {
+			fmt.Println(addr)
 		}
-	}
+		return nil
+	},
+}
 
-	// Try as category
-	cat := forge.Category(pattern)
-	if bycat := forge.ByCategory(cat); len(bycat) > 0 {
-		return bycat
-	}
-
-	// Try as name across all categories
-	var matches []forge.Generator
-	for _, g := range forge.All() {
-		if g.Name() == pattern {
-			matches = append(matches, g)
-		}
-	}
-	return matches
+func resolveGenerators(pattern string) ([]forge.Generator, error) {
+	return forge.Resolve(pattern)
 }
 
 func runBenchmarks(cmd *cobra.Command, generators []forge.Generator, opts bench.Options) ([]*bench.Result, error) {
 	var results []*bench.Result
 	for _, g := range generators {
-		fmt.Fprintf(cmd.ErrOrStderr(), "Benchmarking %s/%s...\n", g.Category(), g.Name())
+		addr := forge.Address(g)
+		fmt.Fprintf(cmd.ErrOrStderr(), "Benchmarking %s...\n", addr)
 		r, err := bench.Run(cmd.Context(), g, opts)
 		if err != nil {
-			return nil, fmt.Errorf("bench %s: %w", g.Name(), err)
+			return nil, fmt.Errorf("bench %s: %w", addr, err)
 		}
 		results = append(results, r)
 	}

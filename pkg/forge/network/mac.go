@@ -20,6 +20,7 @@ func init() {
 type MAC struct{}
 
 func (m *MAC) Name() string             { return "mac" }
+func (m *MAC) Group() string            { return "mac" }
 func (m *MAC) Description() string      { return "Generate a random locally-administered MAC address" }
 func (m *MAC) Category() forge.Category { return forge.CategoryNetwork }
 

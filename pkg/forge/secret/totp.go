@@ -30,6 +30,7 @@ func init() {
 type TOTP struct{}
 
 func (t *TOTP) Name() string             { return "totp" }
+func (t *TOTP) Group() string            { return "totp" }
 func (t *TOTP) Description() string      { return "Generate a TOTP secret and otpauth URI" }
 func (t *TOTP) Category() forge.Category { return forge.CategorySecret }
 

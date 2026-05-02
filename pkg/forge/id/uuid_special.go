@@ -15,6 +15,7 @@ func init() {
 type UUIDNil struct{}
 
 func (u *UUIDNil) Name() string             { return "nil" }
+func (u *UUIDNil) Group() string            { return "uuid" }
 func (u *UUIDNil) Description() string      { return "Output the nil UUID (all zeros)" }
 func (u *UUIDNil) Category() forge.Category { return forge.CategoryID }
 
@@ -35,6 +36,7 @@ func (u *UUIDNil) Bench(ctx context.Context) (*forge.BenchResult, error) {
 type UUIDMax struct{}
 
 func (u *UUIDMax) Name() string             { return "max" }
+func (u *UUIDMax) Group() string            { return "uuid" }
 func (u *UUIDMax) Description() string      { return "Output the max UUID (all ones)" }
 func (u *UUIDMax) Category() forge.Category { return forge.CategoryID }
 

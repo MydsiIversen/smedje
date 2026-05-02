@@ -32,6 +32,7 @@ const (
 type Password struct{}
 
 func (p *Password) Name() string             { return "password" }
+func (p *Password) Group() string            { return "password" }
 func (p *Password) Description() string      { return "Generate a random password" }
 func (p *Password) Category() forge.Category { return forge.CategorySecret }
 

@@ -17,6 +17,7 @@ func init() {
 type UUIDv4 struct{}
 
 func (u *UUIDv4) Name() string             { return "v4" }
+func (u *UUIDv4) Group() string            { return "uuid" }
 func (u *UUIDv4) Description() string      { return "Generate a UUIDv4 (RFC 9562, random)" }
 func (u *UUIDv4) Category() forge.Category { return forge.CategoryID }
 

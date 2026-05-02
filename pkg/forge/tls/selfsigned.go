@@ -28,6 +28,7 @@ func init() {
 type SelfSigned struct{}
 
 func (s *SelfSigned) Name() string             { return "self-signed" }
+func (s *SelfSigned) Group() string            { return "tls" }
 func (s *SelfSigned) Description() string      { return "Generate a self-signed TLS certificate" }
 func (s *SelfSigned) Category() forge.Category { return forge.CategoryCrypto }
 

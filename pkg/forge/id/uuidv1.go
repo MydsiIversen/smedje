@@ -19,7 +19,8 @@ func init() {
 // (locally-administered MAC) by default, avoiding host identity leakage.
 type UUIDv1 struct{}
 
-func (u *UUIDv1) Name() string { return "v1" }
+func (u *UUIDv1) Name() string  { return "v1" }
+func (u *UUIDv1) Group() string { return "uuid" }
 func (u *UUIDv1) Description() string {
 	return "Generate a UUIDv1 (RFC 9562, time-based with random node)"
 }

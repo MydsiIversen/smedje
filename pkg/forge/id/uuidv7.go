@@ -21,6 +21,7 @@ func init() {
 type UUIDv7 struct{}
 
 func (u *UUIDv7) Name() string             { return "v7" }
+func (u *UUIDv7) Group() string            { return "uuid" }
 func (u *UUIDv7) Description() string      { return "Generate a UUIDv7 (RFC 9562, time-ordered)" }
 func (u *UUIDv7) Category() forge.Category { return forge.CategoryID }
 

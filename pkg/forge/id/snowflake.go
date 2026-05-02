@@ -33,6 +33,7 @@ type Snowflake struct {
 const snowflakeEpoch = 1704067200000 // 2024-01-01T00:00:00Z in ms
 
 func (s *Snowflake) Name() string             { return "snowflake" }
+func (s *Snowflake) Group() string            { return "snowflake" }
 func (s *Snowflake) Description() string      { return "Generate a Twitter-style Snowflake ID (64-bit)" }
 func (s *Snowflake) Category() forge.Category { return forge.CategoryID }
 

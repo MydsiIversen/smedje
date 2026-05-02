@@ -18,6 +18,7 @@ func init() {
 type UUIDv8 struct{}
 
 func (u *UUIDv8) Name() string             { return "v8" }
+func (u *UUIDv8) Group() string            { return "uuid" }
 func (u *UUIDv8) Description() string      { return "Generate a UUIDv8 (RFC 9562, custom)" }
 func (u *UUIDv8) Category() forge.Category { return forge.CategoryID }
 

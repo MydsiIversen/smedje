@@ -21,6 +21,7 @@ func init() {
 type Ed25519 struct{}
 
 func (e *Ed25519) Name() string             { return "ed25519" }
+func (e *Ed25519) Group() string            { return "ssh" }
 func (e *Ed25519) Description() string      { return "Generate an Ed25519 OpenSSH keypair" }
 func (e *Ed25519) Category() forge.Category { return forge.CategoryCrypto }
 

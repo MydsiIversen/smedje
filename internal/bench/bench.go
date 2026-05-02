@@ -105,7 +105,7 @@ func Run(ctx context.Context, g forge.Generator, opts Options) (*Result, error) 
 	}
 
 	return &Result{
-		Generator:   g.Name(),
+		Generator:   forge.Address(g),
 		Duration:    Duration(best.duration),
 		Operations:  best.ops,
 		OpsPerSec:   best.opsPerSec,
@@ -129,7 +129,7 @@ func RunLegacy(ctx context.Context, g forge.Generator, d time.Duration) (*forge.
 		return nil, err
 	}
 	return &forge.BenchResult{
-		Generator:  r.Generator,
+		Generator:  forge.Address(g),
 		Iterations: int(r.Operations),
 		Duration:   time.Duration(r.Duration),
 		OpsPerSec:  r.OpsPerSec,

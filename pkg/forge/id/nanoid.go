@@ -24,6 +24,7 @@ const defaultNanoIDLength = 21
 type NanoID struct{}
 
 func (n *NanoID) Name() string             { return "nanoid" }
+func (n *NanoID) Group() string            { return "nanoid" }
 func (n *NanoID) Description() string      { return "Generate a NanoID (URL-safe, configurable)" }
 func (n *NanoID) Category() forge.Category { return forge.CategoryID }
 

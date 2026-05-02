@@ -5,6 +5,8 @@ package forge
 import (
 	"context"
 	"fmt"
+	"sort"
+	"strings"
 	"sync"
 	"time"
 )
@@ -64,6 +66,10 @@ type BenchResult struct {
 type Generator interface {
 	// Name returns the CLI-facing name (e.g., "v7", "ed25519").
 	Name() string
+
+	// Group returns the CLI command group (e.g., "uuid", "ssh", "tls").
+	// Single-variant generators return their own name as the group.
+	Group() string
 
 	// Description returns a one-line summary for help text.
 	Description() string
@@ -125,5 +131,91 @@ func ByCategory(c Category) []Generator {
 			out = append(out, g)
 		}
 	}
+	return out
+}
+
+// Address returns the dotted address for a generator (e.g., "uuid.v7", "ulid").
+func Address(g Generator) string {
+	if g.Group() == g.Name() {
+		return g.Name()
+	}
+	return g.Group() + "." + g.Name()
+}
+
+// Resolve finds generators matching a dotted address string.
+// Supports "uuid.v7" (exact), "ulid" (bare name), and "uuid" (group with
+// multiple variants returns an error listing them all).
+func Resolve(address string) ([]Generator, error) {
+	mu.RLock()
+	defer mu.RUnlock()
+
+	parts := strings.SplitN(address, ".", 2)
+
+	if len(parts) == 2 {
+		group, variant := parts[0], parts[1]
+		for _, g := range registry {
+			if g.Group() == group && g.Name() == variant {
+				return []Generator{g}, nil
+			}
+		}
+		// Check if group exists at all for a better error.
+		var inGroup []string
+		for _, g := range registry {
+			if g.Group() == group {
+				inGroup = append(inGroup, Address(g))
+			}
+		}
+		if len(inGroup) > 0 {
+			sort.Strings(inGroup)
+			return nil, fmt.Errorf("no variant %q in group %q. Available: %s",
+				variant, group, strings.Join(inGroup, ", "))
+		}
+		return nil, fmt.Errorf("no generator group %q found", group)
+	}
+
+	// Bare name: try as group.
+	name := parts[0]
+	var inGroup []Generator
+	for _, g := range registry {
+		if g.Group() == name {
+			inGroup = append(inGroup, g)
+		}
+	}
+
+	if len(inGroup) == 1 {
+		return inGroup, nil
+	}
+	if len(inGroup) > 1 {
+		var addrs []string
+		for _, g := range inGroup {
+			addrs = append(addrs, Address(g))
+		}
+		sort.Strings(addrs)
+		return nil, fmt.Errorf("%q has multiple variants. Did you mean one of:\n  %s",
+			name, strings.Join(addrs, ", "))
+	}
+
+	// Try as exact name match across all generators.
+	for _, g := range registry {
+		if g.Name() == name {
+			inGroup = append(inGroup, g)
+		}
+	}
+	if len(inGroup) == 1 {
+		return inGroup, nil
+	}
+
+	return nil, fmt.Errorf("no generator named %q found", name)
+}
+
+// Addresses returns sorted dotted addresses for all registered generators.
+func Addresses() []string {
+	mu.RLock()
+	defer mu.RUnlock()
+	out := make([]string, 0, len(registry))
+	for _, g := range registry {
+		out = append(out, Address(g))
+	}
+	sort.Strings(out)
 	return out
 }

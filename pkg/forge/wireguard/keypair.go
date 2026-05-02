@@ -20,6 +20,7 @@ func init() {
 type Keypair struct{}
 
 func (k *Keypair) Name() string             { return "keypair" }
+func (k *Keypair) Group() string            { return "wireguard" }
 func (k *Keypair) Description() string      { return "Generate a WireGuard Curve25519 keypair" }
 func (k *Keypair) Category() forge.Category { return forge.CategoryCrypto }
 
