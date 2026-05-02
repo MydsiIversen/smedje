@@ -4,11 +4,17 @@ import (
 	"encoding/json"
 	"net/http"
 	"runtime"
+	"sync"
 	"time"
 
+	"github.com/smedje/smedje/internal/entropy"
 	"github.com/smedje/smedje/internal/explain"
 	"github.com/smedje/smedje/pkg/forge"
 )
+
+// seedMu serializes seeded generation requests since entropy.SetSeed
+// uses global state. Fine for demo use; not suitable for high-concurrency.
+var seedMu sync.Mutex
 
 // handleListGenerators returns all registered generators.
 func (s *Server) handleListGenerators(w http.ResponseWriter, r *http.Request) {
@@ -77,6 +83,15 @@ func (s *Server) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		Count:  1,
 		Format: req.Format,
 		Params: req.Params,
+	}
+
+	if req.Seed != "" && !isCryptoGenerator(g) {
+		seedMu.Lock()
+		entropy.SetSeed(req.Seed)
+		defer func() {
+			entropy.Reset()
+			seedMu.Unlock()
+		}()
 	}
 
 	// Single value: return JSON directly.

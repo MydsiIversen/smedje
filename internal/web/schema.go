@@ -218,6 +218,11 @@ func listGenerators() []GeneratorInfo {
 	return infos
 }
 
+// isCryptoGenerator returns true for generators that should not use seeded entropy.
+func isCryptoGenerator(g forge.Generator) bool {
+	return g.Category() == forge.CategoryCrypto
+}
+
 // resolveGenerator looks up a generator by its dotted address (e.g. "uuid.v7").
 func resolveGenerator(address string) (forge.Generator, error) {
 	// Normalize: the API uses dots, Resolve already handles dots.
