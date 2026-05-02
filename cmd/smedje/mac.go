@@ -18,6 +18,7 @@ func init() {
 	flags.AddOutputFlags(macCmd)
 	flags.AddBulkFlags(macCmd)
 	flags.AddBenchFlag(macCmd)
+	flags.AddSeedFlags(macCmd)
 }
 
 var macCmd = &cobra.Command{
@@ -33,6 +34,8 @@ var macCmd = &cobra.Command{
 			return runBench(cmd, g)
 		}
 
+		flags.ApplySeed(cmd)
+		defer flags.CleanupSeed(cmd)
 		of := flags.GetOutputFlags(cmd)
 		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
 			Generator: g,

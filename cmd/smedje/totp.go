@@ -20,6 +20,7 @@ func init() {
 	flags.AddOutputFlags(totpCmd)
 	flags.AddBulkFlags(totpCmd)
 	flags.AddBenchFlag(totpCmd)
+	flags.AddSeedFlags(totpCmd)
 }
 
 var totpCmd = &cobra.Command{
@@ -35,6 +36,8 @@ var totpCmd = &cobra.Command{
 			return runBench(cmd, g)
 		}
 
+		flags.ApplySeed(cmd)
+		defer flags.CleanupSeed(cmd)
 		of := flags.GetOutputFlags(cmd)
 		issuer, _ := cmd.Flags().GetString("issuer")
 		account, _ := cmd.Flags().GetString("account")

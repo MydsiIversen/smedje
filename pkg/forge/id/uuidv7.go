@@ -26,7 +26,8 @@ func (u *UUIDv7) Description() string      { return "Generate a UUIDv7 (RFC 9562
 func (u *UUIDv7) Category() forge.Category { return forge.CategoryID }
 
 func (u *UUIDv7) Generate(ctx context.Context, opts forge.Options) (*forge.Output, error) {
-	id, err := newUUIDv7()
+	now := optTime(opts)
+	id, err := newUUIDv7(now)
 	if err != nil {
 		return nil, err
 	}
@@ -55,11 +56,11 @@ func (u *UUIDv7) Bench(ctx context.Context) (*forge.BenchResult, error) {
 //	+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //	|                         rand_b                                |
 //	+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-func newUUIDv7() ([16]byte, error) {
+func newUUIDv7(now time.Time) ([16]byte, error) {
 	var uuid [16]byte
 
 	// 48-bit millisecond Unix timestamp.
-	ms := uint64(time.Now().UnixMilli())
+	ms := uint64(now.UnixMilli())
 	uuid[0] = byte(ms >> 40)
 	uuid[1] = byte(ms >> 32)
 	uuid[2] = byte(ms >> 24)

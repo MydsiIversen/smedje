@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"time"
 
 	"github.com/smedje/smedje/internal/bench"
 	"github.com/smedje/smedje/internal/entropy"
@@ -29,7 +28,7 @@ func (u *UUIDv6) Generate(ctx context.Context, opts forge.Options) (*forge.Outpu
 
 	// 60-bit Gregorian timestamp (same as v1).
 	const uuidEpoch = 122192928000000000
-	now := time.Now()
+	now := optTime(opts)
 	t := uint64(now.UnixNano()/100) + uuidEpoch
 
 	// UUIDv6 layout: time_high (32) | time_mid (16) | ver(4) + time_low (12) | var(2) + clock_seq (14) | node (48)

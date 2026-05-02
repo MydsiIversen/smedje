@@ -17,6 +17,7 @@ func init() {
 	flags.AddOutputFlags(snowflakeCmd)
 	flags.AddBulkFlags(snowflakeCmd)
 	flags.AddBenchFlag(snowflakeCmd)
+	flags.AddSeedFlags(snowflakeCmd)
 }
 
 var snowflakeCmd = &cobra.Command{
@@ -32,19 +33,23 @@ var snowflakeCmd = &cobra.Command{
 			return runBench(cmd, g)
 		}
 
+		timeFn := flags.ApplySeed(cmd)
+		defer flags.CleanupSeed(cmd)
 		of := flags.GetOutputFlags(cmd)
 		worker, _ := cmd.Flags().GetInt("worker")
 
+		opts := forge.Options{
+			Count:  1,
+			Format: of.ResolveFormat(),
+			Params: map[string]string{"worker": fmt.Sprintf("%d", worker)},
+			Time:   timeFn,
+		}
 		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
 			Generator: g,
-			Opts: forge.Options{
-				Count:  1,
-				Format: of.ResolveFormat(),
-				Params: map[string]string{"worker": fmt.Sprintf("%d", worker)},
-			},
-			Count:  flags.GetCount(cmd),
-			Format: of.ResolveFormat(),
-			Writer: os.Stdout,
+			Opts:      opts,
+			Count:     flags.GetCount(cmd),
+			Format:    of.ResolveFormat(),
+			Writer:    os.Stdout,
 		})
 	},
 }

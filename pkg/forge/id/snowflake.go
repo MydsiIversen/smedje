@@ -53,24 +53,28 @@ func (s *Snowflake) Generate(ctx context.Context, opts forge.Options) (*forge.Ou
 	}
 
 	s.mu.Lock()
-	now := time.Now().UnixMilli() - snowflakeEpoch
-	if now == s.lastMS {
+	nowMS := optTime(opts).UnixMilli() - snowflakeEpoch
+	if nowMS == s.lastMS {
 		s.sequence++
 		if s.sequence > 4095 {
-			// Spin until next millisecond.
-			for now <= s.lastMS {
-				now = time.Now().UnixMilli() - snowflakeEpoch
+			if opts.Time != nil {
+				// Seeded: bump by 1ms to avoid spin.
+				nowMS = s.lastMS + 1
+			} else {
+				for nowMS <= s.lastMS {
+					nowMS = time.Now().UnixMilli() - snowflakeEpoch
+				}
 			}
 			s.sequence = 0
 		}
 	} else {
 		s.sequence = 0
 	}
-	s.lastMS = now
+	s.lastMS = nowMS
 	seq := s.sequence
 	s.mu.Unlock()
 
-	id := (now << 22) | (workerID << 12) | seq
+	id := (nowMS << 22) | (workerID << 12) | seq
 
 	return &forge.Output{
 		Name: "snowflake",

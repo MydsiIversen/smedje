@@ -24,7 +24,8 @@ func (u *ULID) Description() string      { return "Generate a ULID (Crockford Ba
 func (u *ULID) Category() forge.Category { return forge.CategoryID }
 
 func (u *ULID) Generate(ctx context.Context, opts forge.Options) (*forge.Output, error) {
-	id, err := newULID()
+	now := optTime(opts)
+	id, err := newULID(now)
 	if err != nil {
 		return nil, err
 	}
@@ -43,11 +44,11 @@ func (u *ULID) Bench(ctx context.Context) (*forge.BenchResult, error) {
 // Crockford Base32 alphabet (excludes I, L, O, U to avoid ambiguity).
 const crockford = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 
-func newULID() (string, error) {
+func newULID(now time.Time) (string, error) {
 	var buf [26]byte
 
 	// Timestamp: 48-bit millisecond Unix time, encoded as 10 base32 chars.
-	ms := uint64(time.Now().UnixMilli())
+	ms := uint64(now.UnixMilli())
 	for i := 9; i >= 0; i-- {
 		buf[i] = crockford[ms&0x1F]
 		ms >>= 5

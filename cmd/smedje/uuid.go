@@ -28,6 +28,7 @@ func init() {
 	flags.AddOutputFlags(uuidCmd)
 	flags.AddBulkFlags(uuidCmd)
 	flags.AddBenchFlag(uuidCmd)
+	flags.AddSeedFlags(uuidCmd)
 }
 
 var uuidCmd = &cobra.Command{
@@ -39,10 +40,13 @@ var uuidCmd = &cobra.Command{
 		if !ok {
 			return fmt.Errorf("generator not found: id/v7")
 		}
+		timeFn := flags.ApplySeed(cmd)
+		defer flags.CleanupSeed(cmd)
 		of := flags.GetOutputFlags(cmd)
+		opts := forge.Options{Count: 1, Format: of.ResolveFormat(), Time: timeFn}
 		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
 			Generator: g,
-			Opts:      forge.Options{Count: 1, Format: of.ResolveFormat()},
+			Opts:      opts,
 			Count:     flags.GetCount(cmd),
 			Format:    of.ResolveFormat(),
 			Writer:    os.Stdout,
@@ -64,10 +68,13 @@ func newUUIDSubcmd(name, desc string) *cobra.Command {
 				return runBench(cmd, g)
 			}
 
+			timeFn := flags.ApplySeed(cmd)
+			defer flags.CleanupSeed(cmd)
 			of := flags.GetOutputFlags(cmd)
+			opts := forge.Options{Count: 1, Format: of.ResolveFormat(), Time: timeFn}
 			return flags.RunGenerate(cmd.Context(), flags.RunOptions{
 				Generator: g,
-				Opts:      forge.Options{Count: 1, Format: of.ResolveFormat()},
+				Opts:      opts,
 				Count:     flags.GetCount(cmd),
 				Format:    of.ResolveFormat(),
 				Writer:    os.Stdout,
@@ -77,5 +84,6 @@ func newUUIDSubcmd(name, desc string) *cobra.Command {
 	flags.AddOutputFlags(cmd)
 	flags.AddBulkFlags(cmd)
 	flags.AddBenchFlag(cmd)
+	flags.AddSeedFlags(cmd)
 	return cmd
 }

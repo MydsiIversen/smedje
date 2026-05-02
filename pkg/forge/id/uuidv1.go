@@ -27,7 +27,8 @@ func (u *UUIDv1) Description() string {
 func (u *UUIDv1) Category() forge.Category { return forge.CategoryID }
 
 func (u *UUIDv1) Generate(ctx context.Context, opts forge.Options) (*forge.Output, error) {
-	id, err := newUUIDv1()
+	now := optTime(opts)
+	id, err := newUUIDv1(now)
 	if err != nil {
 		return nil, err
 	}
@@ -48,12 +49,11 @@ func (u *UUIDv1) Bench(ctx context.Context) (*forge.BenchResult, error) {
 //	time_low (32) | time_mid (16) | ver(4) + time_hi (12) | var(2) + clock_seq (14) | node (48)
 //
 // Uses a random node ID with the multicast bit set (locally administered).
-func newUUIDv1() ([16]byte, error) {
+func newUUIDv1(now time.Time) ([16]byte, error) {
 	var uuid [16]byte
 
 	// 60-bit timestamp: 100-nanosecond intervals since 1582-10-15.
 	const uuidEpoch = 122192928000000000 // 100ns intervals from 1582 to 1970
-	now := time.Now()
 	t := uint64(now.UnixNano()/100) + uuidEpoch
 
 	// time_low

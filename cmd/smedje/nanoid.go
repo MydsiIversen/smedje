@@ -18,6 +18,7 @@ func init() {
 	flags.AddOutputFlags(nanoidCmd)
 	flags.AddBulkFlags(nanoidCmd)
 	flags.AddBenchFlag(nanoidCmd)
+	flags.AddSeedFlags(nanoidCmd)
 }
 
 var nanoidCmd = &cobra.Command{
@@ -33,6 +34,8 @@ var nanoidCmd = &cobra.Command{
 			return runBench(cmd, g)
 		}
 
+		timeFn := flags.ApplySeed(cmd)
+		defer flags.CleanupSeed(cmd)
 		of := flags.GetOutputFlags(cmd)
 		length, _ := cmd.Flags().GetInt("length")
 		alphabet, _ := cmd.Flags().GetString("alphabet")
@@ -44,9 +47,10 @@ var nanoidCmd = &cobra.Command{
 			params["alphabet"] = alphabet
 		}
 
+		opts := forge.Options{Count: 1, Format: of.ResolveFormat(), Params: params, Time: timeFn}
 		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
 			Generator: g,
-			Opts:      forge.Options{Count: 1, Format: of.ResolveFormat(), Params: params},
+			Opts:      opts,
 			Count:     flags.GetCount(cmd),
 			Format:    of.ResolveFormat(),
 			Writer:    os.Stdout,

@@ -20,6 +20,7 @@ func init() {
 	flags.AddOutputFlags(passwordCmd)
 	flags.AddBulkFlags(passwordCmd)
 	flags.AddBenchFlag(passwordCmd)
+	flags.AddSeedFlags(passwordCmd)
 }
 
 var passwordCmd = &cobra.Command{
@@ -35,6 +36,8 @@ var passwordCmd = &cobra.Command{
 			return runBench(cmd, g)
 		}
 
+		flags.ApplySeed(cmd)
+		defer flags.CleanupSeed(cmd)
 		of := flags.GetOutputFlags(cmd)
 		length, _ := cmd.Flags().GetInt("length")
 		charset, _ := cmd.Flags().GetString("charset")

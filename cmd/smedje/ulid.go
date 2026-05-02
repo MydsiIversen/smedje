@@ -16,6 +16,7 @@ func init() {
 	flags.AddOutputFlags(ulidCmd)
 	flags.AddBulkFlags(ulidCmd)
 	flags.AddBenchFlag(ulidCmd)
+	flags.AddSeedFlags(ulidCmd)
 }
 
 var ulidCmd = &cobra.Command{
@@ -31,10 +32,13 @@ var ulidCmd = &cobra.Command{
 			return runBench(cmd, g)
 		}
 
+		timeFn := flags.ApplySeed(cmd)
+		defer flags.CleanupSeed(cmd)
 		of := flags.GetOutputFlags(cmd)
+		opts := forge.Options{Count: 1, Format: of.ResolveFormat(), Time: timeFn}
 		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
 			Generator: g,
-			Opts:      forge.Options{Count: 1, Format: of.ResolveFormat()},
+			Opts:      opts,
 			Count:     flags.GetCount(cmd),
 			Format:    of.ResolveFormat(),
 			Writer:    os.Stdout,

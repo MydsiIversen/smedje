@@ -32,6 +32,10 @@ type Options struct {
 	// Params holds generator-specific key-value options (e.g., "length"
 	// for passwords, "worker" for Snowflake).
 	Params map[string]string
+
+	// Time returns the current time. When nil, generators use time.Now().
+	// Set to a fixed-value function for deterministic output with --seed.
+	Time func() time.Time
 }
 
 // Output is the result of a single Generate call.
