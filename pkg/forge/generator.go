@@ -66,6 +66,11 @@ type BenchResult struct {
 	OpsPerSec  float64
 }
 
+// Explainer is optionally implemented by generators that support --why.
+type Explainer interface {
+	Why() string
+}
+
 // Generator is the interface every forge generator implements.
 type Generator interface {
 	// Name returns the CLI-facing name (e.g., "v7", "ed25519").

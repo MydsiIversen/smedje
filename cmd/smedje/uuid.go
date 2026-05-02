@@ -29,6 +29,7 @@ func init() {
 	flags.AddBulkFlags(uuidCmd)
 	flags.AddBenchFlag(uuidCmd)
 	flags.AddSeedFlags(uuidCmd)
+	flags.AddWhyFlag(uuidCmd)
 }
 
 var uuidCmd = &cobra.Command{
@@ -44,6 +45,11 @@ var uuidCmd = &cobra.Command{
 		defer flags.CleanupSeed(cmd)
 		of := flags.GetOutputFlags(cmd)
 		opts := forge.Options{Count: 1, Format: of.ResolveFormat(), Time: timeFn}
+
+		if handled, err := flags.RunWhy(cmd, g, opts); handled {
+			return err
+		}
+
 		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
 			Generator: g,
 			Opts:      opts,
@@ -72,6 +78,11 @@ func newUUIDSubcmd(name, desc string) *cobra.Command {
 			defer flags.CleanupSeed(cmd)
 			of := flags.GetOutputFlags(cmd)
 			opts := forge.Options{Count: 1, Format: of.ResolveFormat(), Time: timeFn}
+
+			if handled, err := flags.RunWhy(cmd, g, opts); handled {
+				return err
+			}
+
 			return flags.RunGenerate(cmd.Context(), flags.RunOptions{
 				Generator: g,
 				Opts:      opts,
@@ -85,5 +96,6 @@ func newUUIDSubcmd(name, desc string) *cobra.Command {
 	flags.AddBulkFlags(cmd)
 	flags.AddBenchFlag(cmd)
 	flags.AddSeedFlags(cmd)
+	flags.AddWhyFlag(cmd)
 	return cmd
 }
