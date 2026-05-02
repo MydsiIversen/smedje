@@ -8,6 +8,7 @@ import (
 
 	"github.com/smedje/smedje/internal/config"
 	"github.com/smedje/smedje/internal/output"
+	"github.com/smedje/smedje/internal/progress"
 	"github.com/smedje/smedje/pkg/forge"
 )
 
@@ -48,14 +49,19 @@ func RunGenerate(ctx context.Context, r RunOptions) error {
 	}
 
 	// Batch: collect and render.
+	quiet := r.Format == "quiet"
+	prog := progress.New(forge.Address(r.Generator), r.Count, quiet)
 	outputs := make([]*forge.Output, 0, r.Count)
-	for range r.Count {
+	for i := range r.Count {
 		out, err := r.Generator.Generate(ctx, r.Opts)
 		if err != nil {
+			prog.Done()
 			return err
 		}
 		outputs = append(outputs, out)
+		prog.Update(i + 1)
 	}
+	prog.Done()
 
 	return output.RenderBatch(r.Writer, outputs, r.Format, output.BatchOptions{
 		SQLTable: r.SQLTable,
