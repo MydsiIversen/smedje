@@ -1,14 +1,18 @@
 package web
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/smedje/smedje/internal/entropy"
 	"github.com/smedje/smedje/internal/explain"
+	"github.com/smedje/smedje/internal/recommend"
 	"github.com/smedje/smedje/pkg/forge"
 )
 
@@ -183,25 +187,183 @@ func (s *Server) handleExplain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, ExplainResponse{
-		Detected: m.Format,
-		Fields:   m.Fields,
-	})
+	resp := ExplainResponse{
+		Detected:       m.Format,
+		Fields:         m.Fields,
+		Layout:         convertLayout(m.Layout),
+		Spec:           specURL(m.Format),
+		AlternateForms: alternateForms(req.Value, m.Format),
+	}
+	writeJSON(w, http.StatusOK, resp)
 }
 
-// handleRecommend returns placeholder recommendations. Task 6 will extract
-// the real recommendation data from cmd/smedje/recommend.go.
+// convertLayout maps explain.LayoutSegment values to the web LayoutSegment type.
+func convertLayout(segs []explain.LayoutSegment) []LayoutSegment {
+	if len(segs) == 0 {
+		return nil
+	}
+	out := make([]LayoutSegment, len(segs))
+	for i, s := range segs {
+		out[i] = LayoutSegment{
+			Start:       s.Start,
+			End:         s.End,
+			Label:       s.Label,
+			Type:        s.Type,
+			Value:       s.Value,
+			Description: s.Description,
+		}
+	}
+	return out
+}
+
+// specURL returns the specification URL for the given format string.
+func specURL(format string) string {
+	f := strings.ToLower(format)
+	switch {
+	case strings.Contains(f, "uuid"):
+		return "https://www.rfc-editor.org/rfc/rfc9562"
+	case strings.Contains(f, "ulid"):
+		return "https://github.com/ulid/spec"
+	default:
+		return ""
+	}
+}
+
+// alternateForms returns alternate string representations of the input value.
+func alternateForms(input, format string) map[string]string {
+	f := strings.ToLower(format)
+	forms := make(map[string]string)
+
+	switch {
+	case strings.Contains(f, "uuid"):
+		lower := strings.ToLower(strings.TrimSpace(input))
+		hex := strings.ReplaceAll(lower, "-", "")
+		forms["hex"] = hex
+		forms["urn"] = "urn:uuid:" + lower
+		raw, err := decodeHex(hex)
+		if err == nil {
+			forms["base64"] = base64.StdEncoding.EncodeToString(raw)
+		}
+	case strings.Contains(f, "ulid"):
+		trimmed := strings.TrimSpace(input)
+		forms["hex"] = ulidToHex(trimmed)
+		raw, err := decodeHex(forms["hex"])
+		if err == nil {
+			forms["base64"] = base64.StdEncoding.EncodeToString(raw)
+		}
+	case strings.Contains(f, "snowflake"):
+		trimmed := strings.TrimSpace(input)
+		var n uint64
+		for _, c := range trimmed {
+			n = n*10 + uint64(c-'0')
+		}
+		forms["hex"] = fmt.Sprintf("%x", n)
+		forms["binary"] = fmt.Sprintf("%b", n)
+	}
+
+	if len(forms) == 0 {
+		return nil
+	}
+	return forms
+}
+
+// decodeHex is a small wrapper around hex.DecodeString for readability.
+func decodeHex(s string) ([]byte, error) {
+	return hexDecodeString(s)
+}
+
+// hexDecodeString decodes a hex string to bytes.
+var hexDecodeString = func(s string) ([]byte, error) {
+	b := make([]byte, len(s)/2)
+	for i := 0; i < len(s); i += 2 {
+		hi := unhex(s[i])
+		lo := unhex(s[i+1])
+		if hi < 0 || lo < 0 {
+			return nil, fmt.Errorf("invalid hex char")
+		}
+		b[i/2] = byte(hi<<4 | lo)
+	}
+	return b, nil
+}
+
+func unhex(c byte) int {
+	switch {
+	case c >= '0' && c <= '9':
+		return int(c - '0')
+	case c >= 'a' && c <= 'f':
+		return int(c - 'a' + 10)
+	case c >= 'A' && c <= 'F':
+		return int(c - 'A' + 10)
+	default:
+		return -1
+	}
+}
+
+// ulidToHex converts a ULID (Crockford base32) to a hex string.
+func ulidToHex(s string) string {
+	const alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+	upper := strings.ToUpper(s)
+
+	// ULID is 128 bits = 16 bytes. Decode the 26 Crockford chars.
+	var bits [128]byte
+	bitIdx := 0
+	for i := 0; i < 26; i++ {
+		idx := strings.IndexByte(alphabet, upper[i])
+		if idx < 0 {
+			return ""
+		}
+		// Each char encodes 5 bits, except first encodes only 2 (total: 2 + 25*5 = 127, but spec says 128).
+		// Actually: 26 * 5 = 130 bits, top 2 bits must be zero.
+		nBits := 5
+		for b := nBits - 1; b >= 0 && bitIdx < 128; b-- {
+			if bitIdx < 2 {
+				// first 2 positions come from the top bits of the first char
+			}
+			if idx&(1<<b) != 0 {
+				bits[bitIdx] = 1
+			}
+			bitIdx++
+		}
+	}
+
+	// Convert bits to hex.
+	result := make([]byte, 0, 32)
+	for i := 0; i < 128; i += 4 {
+		val := bits[i]<<3 | bits[i+1]<<2 | bits[i+2]<<1 | bits[i+3]
+		if val < 10 {
+			result = append(result, '0'+val)
+		} else {
+			result = append(result, 'a'+val-10)
+		}
+	}
+	return string(result)
+}
+
+// handleRecommend returns opinionated recommendations for a topic.
 func (s *Server) handleRecommend(w http.ResponseWriter, r *http.Request) {
 	topic := r.URL.Query().Get("topic")
 	if topic == "" {
 		writeJSON(w, http.StatusOK, map[string][]string{
-			"topics": {"id", "ssh-key", "tls-cert", "password", "hash", "jwt", "secret", "vpn-key"},
+			"topics": recommend.Topics(),
 		})
 		return
 	}
 
-	// Placeholder: return an empty array until Task 6 wires real data.
-	writeJSON(w, http.StatusOK, []struct{}{})
+	recs, ok := recommend.Recommendations[topic]
+	if !ok {
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{
+			"error":  fmt.Sprintf("unknown topic %q", topic),
+			"topics": recommend.Topics(),
+		})
+		return
+	}
+
+	useCase := r.URL.Query().Get("use-case")
+	if useCase != "" {
+		recs = recommend.FilterByUseCase(recs, useCase)
+	}
+
+	writeJSON(w, http.StatusOK, recs)
 }
 
 // handleBench runs a generator benchmark.

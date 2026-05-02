@@ -43,8 +43,9 @@ func DefaultConfig() ServerConfig {
 
 // Server is the Smedje HTTP server.
 type Server struct {
-	cfg ServerConfig
-	mux *http.ServeMux
+	cfg     ServerConfig
+	mux     *http.ServeMux
+	limiter *rateLimiter
 }
 
 // New creates a new Server with the given configuration and registers all
@@ -66,6 +67,9 @@ func New(cfg ServerConfig) *Server {
 	}
 
 	s := &Server{cfg: cfg, mux: http.NewServeMux()}
+	if cfg.Public {
+		s.limiter = newRateLimiter()
+	}
 	s.registerRoutes()
 	return s
 }
@@ -98,7 +102,9 @@ func (s *Server) Handler() http.Handler {
 	if s.cfg.Dev {
 		h = s.corsMiddleware(h)
 	}
-	// Rate limiting placeholder — Task 3 adds the real limiter here.
+	if s.limiter != nil {
+		h = s.rateLimitMiddleware(h)
+	}
 	return h
 }
 
