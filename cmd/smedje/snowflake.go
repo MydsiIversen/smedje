@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/smedje/smedje/internal/flags"
 	"github.com/smedje/smedje/internal/output"
 	"github.com/smedje/smedje/pkg/forge"
 )
@@ -14,9 +15,9 @@ func init() {
 	rootCmd.AddCommand(snowflakeCmd)
 
 	snowflakeCmd.Flags().Int("worker", 0, "Worker ID (0-1023)")
-	snowflakeCmd.Flags().Bool("json", false, "Output as JSON")
-	snowflakeCmd.Flags().Bool("quiet", false, "Output only the value")
-	snowflakeCmd.Flags().Bool("bench", false, "Run a benchmark instead of generating")
+	flags.AddOutputFlags(snowflakeCmd)
+	flags.AddBulkFlags(snowflakeCmd)
+	flags.AddBenchFlag(snowflakeCmd)
 }
 
 var snowflakeCmd = &cobra.Command{
@@ -28,8 +29,7 @@ var snowflakeCmd = &cobra.Command{
 			return fmt.Errorf("generator not found: id/snowflake")
 		}
 
-		benchFlag, _ := cmd.Flags().GetBool("bench")
-		if benchFlag {
+		if flags.GetBench(cmd) {
 			result, err := g.Bench(cmd.Context())
 			if err != nil {
 				return err
@@ -39,26 +39,26 @@ var snowflakeCmd = &cobra.Command{
 			return nil
 		}
 
-		format := "text"
-		if j, _ := cmd.Flags().GetBool("json"); j {
-			format = "json"
-		} else if q, _ := cmd.Flags().GetBool("quiet"); q {
-			format = "quiet"
-		}
-
+		of := flags.GetOutputFlags(cmd)
+		count := flags.GetCount(cmd)
 		worker, _ := cmd.Flags().GetInt("worker")
-		opts := forge.Options{
-			Count:  1,
-			Format: format,
-			Params: map[string]string{
-				"worker": fmt.Sprintf("%d", worker),
-			},
-		}
 
-		out, err := g.Generate(cmd.Context(), opts)
-		if err != nil {
-			return err
+		for i := range count {
+			out, err := g.Generate(cmd.Context(), forge.Options{
+				Count:  1,
+				Format: of.ResolveFormat(),
+				Params: map[string]string{
+					"worker": fmt.Sprintf("%d", worker),
+				},
+			})
+			if err != nil {
+				return err
+			}
+			if err := output.Render(os.Stdout, out, of.ResolveFormat()); err != nil {
+				return err
+			}
+			_ = i
 		}
-		return output.Render(os.Stdout, out, format)
+		return nil
 	},
 }

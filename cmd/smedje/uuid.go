@@ -8,6 +8,7 @@ import (
 
 	_ "github.com/smedje/smedje/pkg/forge/id"
 
+	"github.com/smedje/smedje/internal/flags"
 	"github.com/smedje/smedje/internal/output"
 	"github.com/smedje/smedje/pkg/forge"
 )
@@ -16,9 +17,9 @@ func init() {
 	rootCmd.AddCommand(uuidCmd)
 	uuidCmd.AddCommand(uuidV7Cmd)
 
-	uuidV7Cmd.Flags().Bool("json", false, "Output as JSON")
-	uuidV7Cmd.Flags().Bool("quiet", false, "Output only the value")
-	uuidV7Cmd.Flags().Bool("bench", false, "Run a benchmark instead of generating")
+	flags.AddOutputFlags(uuidV7Cmd)
+	flags.AddBulkFlags(uuidV7Cmd)
+	flags.AddBenchFlag(uuidV7Cmd)
 }
 
 var uuidCmd = &cobra.Command{
@@ -35,8 +36,7 @@ var uuidV7Cmd = &cobra.Command{
 			return fmt.Errorf("generator not found: id/v7")
 		}
 
-		benchFlag, _ := cmd.Flags().GetBool("bench")
-		if benchFlag {
+		if flags.GetBench(cmd) {
 			result, err := g.Bench(cmd.Context())
 			if err != nil {
 				return err
@@ -46,17 +46,22 @@ var uuidV7Cmd = &cobra.Command{
 			return nil
 		}
 
-		format := "text"
-		if j, _ := cmd.Flags().GetBool("json"); j {
-			format = "json"
-		} else if q, _ := cmd.Flags().GetBool("quiet"); q {
-			format = "quiet"
-		}
+		of := flags.GetOutputFlags(cmd)
+		count := flags.GetCount(cmd)
 
-		out, err := g.Generate(cmd.Context(), forge.Options{Count: 1, Format: format})
-		if err != nil {
-			return err
+		for i := range count {
+			out, err := g.Generate(cmd.Context(), forge.Options{
+				Count:  1,
+				Format: of.ResolveFormat(),
+			})
+			if err != nil {
+				return err
+			}
+			if err := output.Render(os.Stdout, out, of.ResolveFormat()); err != nil {
+				return err
+			}
+			_ = i
 		}
-		return output.Render(os.Stdout, out, format)
+		return nil
 	},
 }

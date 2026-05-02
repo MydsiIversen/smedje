@@ -3,11 +3,13 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	_ "github.com/smedje/smedje/pkg/forge/tls"
 
+	"github.com/smedje/smedje/internal/flags"
 	"github.com/smedje/smedje/internal/output"
 	"github.com/smedje/smedje/pkg/forge"
 )
@@ -19,9 +21,9 @@ func init() {
 	tlsSelfSignedCmd.Flags().String("cn", "localhost", "Common name for the certificate")
 	tlsSelfSignedCmd.Flags().Int("days", 365, "Certificate validity in days")
 	tlsSelfSignedCmd.Flags().StringSlice("san", nil, "Subject alternative names (DNS or IP)")
-	tlsSelfSignedCmd.Flags().Bool("json", false, "Output as JSON")
-	tlsSelfSignedCmd.Flags().Bool("quiet", false, "Output only the values")
-	tlsSelfSignedCmd.Flags().Bool("bench", false, "Run a benchmark instead of generating")
+	flags.AddOutputFlags(tlsSelfSignedCmd)
+	flags.AddBulkFlags(tlsSelfSignedCmd)
+	flags.AddBenchFlag(tlsSelfSignedCmd)
 }
 
 var tlsCmd = &cobra.Command{
@@ -38,8 +40,7 @@ var tlsSelfSignedCmd = &cobra.Command{
 			return fmt.Errorf("generator not found: crypto/self-signed")
 		}
 
-		benchFlag, _ := cmd.Flags().GetBool("bench")
-		if benchFlag {
+		if flags.GetBench(cmd) {
 			result, err := g.Bench(cmd.Context())
 			if err != nil {
 				return err
@@ -49,13 +50,8 @@ var tlsSelfSignedCmd = &cobra.Command{
 			return nil
 		}
 
-		format := "text"
-		if j, _ := cmd.Flags().GetBool("json"); j {
-			format = "json"
-		} else if q, _ := cmd.Flags().GetBool("quiet"); q {
-			format = "quiet"
-		}
-
+		of := flags.GetOutputFlags(cmd)
+		count := flags.GetCount(cmd)
 		cn, _ := cmd.Flags().GetString("cn")
 		days, _ := cmd.Flags().GetInt("days")
 		sans, _ := cmd.Flags().GetStringSlice("san")
@@ -65,24 +61,23 @@ var tlsSelfSignedCmd = &cobra.Command{
 			"days": fmt.Sprintf("%d", days),
 		}
 		if len(sans) > 0 {
-			joined := ""
-			for i, s := range sans {
-				if i > 0 {
-					joined += ","
-				}
-				joined += s
-			}
-			params["san"] = joined
+			params["san"] = strings.Join(sans, ",")
 		}
 
-		out, err := g.Generate(cmd.Context(), forge.Options{
-			Count:  1,
-			Format: format,
-			Params: params,
-		})
-		if err != nil {
-			return err
+		for i := range count {
+			out, err := g.Generate(cmd.Context(), forge.Options{
+				Count:  1,
+				Format: of.ResolveFormat(),
+				Params: params,
+			})
+			if err != nil {
+				return err
+			}
+			if err := output.Render(os.Stdout, out, of.ResolveFormat()); err != nil {
+				return err
+			}
+			_ = i
 		}
-		return output.Render(os.Stdout, out, format)
+		return nil
 	},
 }

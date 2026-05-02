@@ -8,6 +8,7 @@ import (
 
 	_ "github.com/smedje/smedje/pkg/forge/network"
 
+	"github.com/smedje/smedje/internal/flags"
 	"github.com/smedje/smedje/internal/output"
 	"github.com/smedje/smedje/pkg/forge"
 )
@@ -15,9 +16,9 @@ import (
 func init() {
 	rootCmd.AddCommand(macCmd)
 
-	macCmd.Flags().Bool("json", false, "Output as JSON")
-	macCmd.Flags().Bool("quiet", false, "Output only the value")
-	macCmd.Flags().Bool("bench", false, "Run a benchmark instead of generating")
+	flags.AddOutputFlags(macCmd)
+	flags.AddBulkFlags(macCmd)
+	flags.AddBenchFlag(macCmd)
 }
 
 var macCmd = &cobra.Command{
@@ -29,8 +30,7 @@ var macCmd = &cobra.Command{
 			return fmt.Errorf("generator not found: network/mac")
 		}
 
-		benchFlag, _ := cmd.Flags().GetBool("bench")
-		if benchFlag {
+		if flags.GetBench(cmd) {
 			result, err := g.Bench(cmd.Context())
 			if err != nil {
 				return err
@@ -40,17 +40,22 @@ var macCmd = &cobra.Command{
 			return nil
 		}
 
-		format := "text"
-		if j, _ := cmd.Flags().GetBool("json"); j {
-			format = "json"
-		} else if q, _ := cmd.Flags().GetBool("quiet"); q {
-			format = "quiet"
-		}
+		of := flags.GetOutputFlags(cmd)
+		count := flags.GetCount(cmd)
 
-		out, err := g.Generate(cmd.Context(), forge.Options{Count: 1, Format: format})
-		if err != nil {
-			return err
+		for i := range count {
+			out, err := g.Generate(cmd.Context(), forge.Options{
+				Count:  1,
+				Format: of.ResolveFormat(),
+			})
+			if err != nil {
+				return err
+			}
+			if err := output.Render(os.Stdout, out, of.ResolveFormat()); err != nil {
+				return err
+			}
+			_ = i
 		}
-		return output.Render(os.Stdout, out, format)
+		return nil
 	},
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/smedje/smedje/internal/flags"
 	"github.com/smedje/smedje/internal/output"
 	"github.com/smedje/smedje/pkg/forge"
 )
@@ -17,9 +18,9 @@ func init() {
 	totpCmd.Flags().String("account", "user@example.com", "TOTP account label")
 	totpCmd.Flags().Int("digits", 6, "Code length (6 or 8)")
 	totpCmd.Flags().Int("period", 30, "Time step in seconds")
-	totpCmd.Flags().Bool("json", false, "Output as JSON")
-	totpCmd.Flags().Bool("quiet", false, "Output only the values")
-	totpCmd.Flags().Bool("bench", false, "Run a benchmark instead of generating")
+	flags.AddOutputFlags(totpCmd)
+	flags.AddBulkFlags(totpCmd)
+	flags.AddBenchFlag(totpCmd)
 }
 
 var totpCmd = &cobra.Command{
@@ -31,8 +32,7 @@ var totpCmd = &cobra.Command{
 			return fmt.Errorf("generator not found: secret/totp")
 		}
 
-		benchFlag, _ := cmd.Flags().GetBool("bench")
-		if benchFlag {
+		if flags.GetBench(cmd) {
 			result, err := g.Bench(cmd.Context())
 			if err != nil {
 				return err
@@ -42,31 +42,32 @@ var totpCmd = &cobra.Command{
 			return nil
 		}
 
-		format := "text"
-		if j, _ := cmd.Flags().GetBool("json"); j {
-			format = "json"
-		} else if q, _ := cmd.Flags().GetBool("quiet"); q {
-			format = "quiet"
-		}
-
+		of := flags.GetOutputFlags(cmd)
+		count := flags.GetCount(cmd)
 		issuer, _ := cmd.Flags().GetString("issuer")
 		account, _ := cmd.Flags().GetString("account")
 		digits, _ := cmd.Flags().GetInt("digits")
 		period, _ := cmd.Flags().GetInt("period")
 
-		out, err := g.Generate(cmd.Context(), forge.Options{
-			Count:  1,
-			Format: format,
-			Params: map[string]string{
-				"issuer":  issuer,
-				"account": account,
-				"digits":  fmt.Sprintf("%d", digits),
-				"period":  fmt.Sprintf("%d", period),
-			},
-		})
-		if err != nil {
-			return err
+		for i := range count {
+			out, err := g.Generate(cmd.Context(), forge.Options{
+				Count:  1,
+				Format: of.ResolveFormat(),
+				Params: map[string]string{
+					"issuer":  issuer,
+					"account": account,
+					"digits":  fmt.Sprintf("%d", digits),
+					"period":  fmt.Sprintf("%d", period),
+				},
+			})
+			if err != nil {
+				return err
+			}
+			if err := output.Render(os.Stdout, out, of.ResolveFormat()); err != nil {
+				return err
+			}
+			_ = i
 		}
-		return output.Render(os.Stdout, out, format)
+		return nil
 	},
 }

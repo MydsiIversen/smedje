@@ -8,6 +8,7 @@ import (
 
 	_ "github.com/smedje/smedje/pkg/forge/secret"
 
+	"github.com/smedje/smedje/internal/flags"
 	"github.com/smedje/smedje/internal/output"
 	"github.com/smedje/smedje/pkg/forge"
 )
@@ -17,9 +18,9 @@ func init() {
 
 	passwordCmd.Flags().Int("length", 24, "Password length (8-256)")
 	passwordCmd.Flags().String("charset", "full", "Character set: full, alpha, alphanum, digits")
-	passwordCmd.Flags().Bool("json", false, "Output as JSON")
-	passwordCmd.Flags().Bool("quiet", false, "Output only the value")
-	passwordCmd.Flags().Bool("bench", false, "Run a benchmark instead of generating")
+	flags.AddOutputFlags(passwordCmd)
+	flags.AddBulkFlags(passwordCmd)
+	flags.AddBenchFlag(passwordCmd)
 }
 
 var passwordCmd = &cobra.Command{
@@ -31,8 +32,7 @@ var passwordCmd = &cobra.Command{
 			return fmt.Errorf("generator not found: secret/password")
 		}
 
-		benchFlag, _ := cmd.Flags().GetBool("bench")
-		if benchFlag {
+		if flags.GetBench(cmd) {
 			result, err := g.Bench(cmd.Context())
 			if err != nil {
 				return err
@@ -42,27 +42,28 @@ var passwordCmd = &cobra.Command{
 			return nil
 		}
 
-		format := "text"
-		if j, _ := cmd.Flags().GetBool("json"); j {
-			format = "json"
-		} else if q, _ := cmd.Flags().GetBool("quiet"); q {
-			format = "quiet"
-		}
-
+		of := flags.GetOutputFlags(cmd)
+		count := flags.GetCount(cmd)
 		length, _ := cmd.Flags().GetInt("length")
 		charset, _ := cmd.Flags().GetString("charset")
 
-		out, err := g.Generate(cmd.Context(), forge.Options{
-			Count:  1,
-			Format: format,
-			Params: map[string]string{
-				"length":  fmt.Sprintf("%d", length),
-				"charset": charset,
-			},
-		})
-		if err != nil {
-			return err
+		for i := range count {
+			out, err := g.Generate(cmd.Context(), forge.Options{
+				Count:  1,
+				Format: of.ResolveFormat(),
+				Params: map[string]string{
+					"length":  fmt.Sprintf("%d", length),
+					"charset": charset,
+				},
+			})
+			if err != nil {
+				return err
+			}
+			if err := output.Render(os.Stdout, out, of.ResolveFormat()); err != nil {
+				return err
+			}
+			_ = i
 		}
-		return output.Render(os.Stdout, out, format)
+		return nil
 	},
 }
