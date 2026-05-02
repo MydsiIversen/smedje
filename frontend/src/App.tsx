@@ -4,12 +4,15 @@ import { ExplainerBar } from "./components/ExplainerBar"
 import { Sidebar } from "./components/Sidebar"
 import { GeneratorPanel } from "./components/GeneratorPanel"
 import { CommandPalette } from "./components/CommandPalette"
+import { RecommendModal } from "./components/RecommendModal"
 import { fetchVersion, fetchGenerators } from "./lib/api"
 import type { GeneratorInfo } from "./lib/types"
 
 function App() {
   const [selected, setSelected] = useState<string | null>(null)
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [recommendOpen, setRecommendOpen] = useState(false)
+  const [recommendTopic, setRecommendTopic] = useState<string | undefined>()
   const [version, setVersion] = useState<string>("")
   const [generators, setGenerators] = useState<GeneratorInfo[]>([])
 
@@ -42,8 +45,9 @@ function App() {
     // Explain mode is deferred to a later phase.
   }, [])
 
-  const handleRecommend = useCallback((_topic: string) => {
-    // Recommend mode is deferred to a later phase.
+  const handleRecommend = useCallback((topic: string) => {
+    setRecommendTopic(topic)
+    setRecommendOpen(true)
   }, [])
 
   return (
@@ -79,6 +83,13 @@ function App() {
         onSelectGenerator={handleSelectGenerator}
         onExplain={handleExplain}
         onRecommend={handleRecommend}
+      />
+
+      <RecommendModal
+        open={recommendOpen}
+        onOpenChange={setRecommendOpen}
+        initialTopic={recommendTopic}
+        onUseGenerator={handleSelectGenerator}
       />
     </div>
   )
