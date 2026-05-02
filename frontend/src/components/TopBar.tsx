@@ -24,6 +24,7 @@ export function TopBar({ onPaletteOpen, version }: TopBarProps) {
       <div className="flex items-center gap-3">
         <button
           onClick={onPaletteOpen}
+          aria-label="Open command palette"
           className="flex items-center gap-1 text-muted-foreground text-xs hover:text-foreground transition-colors duration-150"
         >
           <kbd className="px-1.5 py-0.5 border border-border text-xs font-mono rounded-[4px]">

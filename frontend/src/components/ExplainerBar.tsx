@@ -88,6 +88,7 @@ export function ExplainerBar({ onForgeAnother }: ExplainerBarProps) {
           value={input}
           onChange={handleChange}
           placeholder="Paste an ID, key, or token to decode it..."
+          data-explainer-input
           className="w-full bg-panel border border-border rounded-md px-6 py-4 font-mono text-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-forge transition-colors duration-150"
         />
       </div>

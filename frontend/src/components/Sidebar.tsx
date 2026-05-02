@@ -53,10 +53,14 @@ export function Sidebar({ selected, onSelect }: SidebarProps) {
 
   return (
     <aside className="fixed top-10 left-0 bottom-0 w-[220px] bg-panel border-r border-border overflow-y-auto">
-      <nav className="py-2">
+      <nav aria-label="Generators" className="py-2">
         {groups.map((group) => (
           <div key={group.label}>
-            <h3 className="uppercase text-xs text-muted-foreground tracking-widest px-4 py-2">
+            <h3
+              role="heading"
+              aria-level={2}
+              className="uppercase text-xs text-muted-foreground tracking-widest px-4 py-2"
+            >
               {group.label}
             </h3>
             {group.generators.map((gen) => {

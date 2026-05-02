@@ -45,14 +45,19 @@ export function OutputPane({
     <div className="flex flex-col h-full gap-3">
       {/* Status line */}
       {status && (
-        <div className="text-xs text-muted-foreground font-mono">
+        <div className="text-xs text-muted-foreground font-mono" aria-live="polite">
           <TypewriterText text={status} speed={10} />
         </div>
       )}
 
       {/* Progress bar */}
       {showProgress && progress && (
-        <div className="space-y-1">
+        <div
+          className="space-y-1"
+          role="progressbar"
+          aria-valuenow={progress.current}
+          aria-valuemax={progress.total}
+        >
           <ProgressBar progress={progress.current / progress.total} />
           <div className="flex justify-between text-xs text-muted-foreground font-mono">
             <span>

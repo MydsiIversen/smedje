@@ -115,6 +115,11 @@ body {
   color: var(--foreground);
 }
 
+*:focus-visible {
+  outline: 2px solid var(--color-forge);
+  outline-offset: 2px;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
