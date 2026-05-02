@@ -5,6 +5,7 @@ import { generateSingle } from "../lib/api"
 import { parseQuery, matchGenerators } from "../lib/palette-parser"
 import { getRecents, addRecent } from "../lib/recents"
 import type { RecentItem } from "../lib/recents"
+import { trackPaletteOpened } from "../lib/analytics"
 
 interface CommandPaletteProps {
   open: boolean
@@ -54,6 +55,7 @@ export function CommandPalette({
   // Load recents when palette opens.
   useEffect(() => {
     if (open) {
+      trackPaletteOpened()
       setRecents(getRecents().slice(0, 8))
       setQuery("")
       setPreview(null)

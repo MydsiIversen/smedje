@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { explain } from "../lib/api"
 import type { ExplainResponse } from "../lib/types"
+import { trackExplainerUsed } from "../lib/analytics"
 import { ExplainResult } from "./ExplainResult"
 
 interface ExplainerBarProps {
@@ -36,6 +37,7 @@ export function ExplainerBar({ onForgeAnother }: ExplainerBarProps) {
       // Only update if this request wasn't aborted.
       if (!ctrl.signal.aborted) {
         setResult(res)
+        if (res) trackExplainerUsed()
       }
     } catch {
       if (!ctrl.signal.aborted) {

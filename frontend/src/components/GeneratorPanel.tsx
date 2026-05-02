@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import type { GeneratorSchema, Artifact, SSEEvent } from "../lib/types"
 import { fetchGeneratorSchema, generateSingle, generateSSE } from "../lib/api"
+import { trackForge } from "../lib/analytics"
 import { Reveal } from "./primitives"
 import { GeneratorForm } from "./GeneratorForm"
 import { OutputPane } from "./OutputPane"
@@ -9,9 +10,10 @@ import { Toast } from "./Toast"
 
 interface GeneratorPanelProps {
   address: string
+  maxCount?: number
 }
 
-export function GeneratorPanel({ address }: GeneratorPanelProps) {
+export function GeneratorPanel({ address, maxCount }: GeneratorPanelProps) {
   const [schema, setSchema] = useState<GeneratorSchema | null>(null)
   const [values, setValues] = useState<Record<string, string>>({})
   const [preview, setPreview] = useState<Artifact | null>(null)
@@ -131,6 +133,7 @@ export function GeneratorPanel({ address }: GeneratorPanelProps) {
   }
 
   function showForgeDone() {
+    trackForge(address)
     setForgeDone(true)
     setToastVisible(true)
     setTimeout(() => {
@@ -204,6 +207,7 @@ export function GeneratorPanel({ address }: GeneratorPanelProps) {
               onPreview={handlePreview}
               forging={forging}
               forgeDone={forgeDone}
+              maxCount={maxCount}
             />
           </div>
 
