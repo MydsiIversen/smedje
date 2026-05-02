@@ -15,6 +15,9 @@ go install github.com/smedje/smedje/cmd/smedje@latest
 
 # Generate things
 smedje uuid v7                 # 019dea33-4e8a-7585-ad4d-6a3232718cb3
+smedje uuid v4                 # 9f8b3c6a-1d4e-4f8a-a2b7-5c6d8e9f0a1b
+smedje ulid                    # 01KQN58A9C978951R7QB2CNDEJ
+smedje nanoid                  # V1StGXR8_Z5jdHi6B-myT
 smedje snowflake               # 309052152221794304
 smedje ssh ed25519             # OpenSSH keypair to stdout
 smedje tls self-signed         # self-signed cert + key
@@ -23,17 +26,43 @@ smedje password                # DJa}#fM%$7e(5|wyL2hl]*28
 smedje totp                    # TOTP secret + otpauth URI
 smedje mac                     # 42:88:8a:b6:fe:3c
 
+# Bulk generation
+smedje uuid v7 --count 1000 --format csv    # 1000 UUIDs as CSV
+smedje password --count 5 --json            # 5 passwords as JSON array
+smedje nanoid --count 10 --format sql       # SQL INSERT statement
+
+# Configuration
+smedje config show --explain   # show all effective values + sources
+smedje config set password.length 32
+
+# Explain any value
+smedje explain "019dea33-4e8a-7585-ad4d-6a3232718cb3"
+# → Format: UUIDv7 (Unix time-ordered)
+#     timestamp: 2026-05-02T...
+
+# Benchmarks
+smedje bench all               # benchmark every generator
+smedje bench compare v7 ulid   # side-by-side comparison
+
 # Output modes
 smedje uuid v7 --json          # {"value": "..."}
 smedje uuid v7 --quiet         # raw value only
-smedje uuid v7 --bench         # self-benchmark
+smedje uuid v7 --format env    # UUIDV7_VALUE=...
 ```
 
 ## What it forges
 
 | Command | What | Key bits |
 |---|---|---|
+| `uuid v1` | RFC 9562 UUIDv1 (time + random node) | 14-bit clock + 48-bit node |
+| `uuid v4` | RFC 9562 UUIDv4 (random) | 122-bit random |
+| `uuid v6` | RFC 9562 UUIDv6 (reordered time) | sortable + 14-bit clock |
 | `uuid v7` | RFC 9562 UUIDv7 (time-ordered) | 74-bit random |
+| `uuid v8` | RFC 9562 UUIDv8 (custom payload) | 122-bit custom |
+| `uuid nil` | Nil UUID (all zeros) | — |
+| `uuid max` | Max UUID (all ones) | — |
+| `ulid` | ULID (Crockford Base32, sortable) | 80-bit random |
+| `nanoid` | NanoID (URL-safe, configurable) | ~126-bit (21 chars) |
 | `snowflake` | Twitter-style 64-bit Snowflake ID | 12-bit sequence |
 | `ssh ed25519` | OpenSSH Ed25519 keypair | 256-bit |
 | `tls self-signed` | Self-signed X.509 leaf (Ed25519) | 256-bit |
@@ -42,18 +71,27 @@ smedje uuid v7 --bench         # self-benchmark
 | `totp` | TOTP secret + otpauth URI | 160-bit (SHA-1 block) |
 | `mac` | Locally-administered unicast MAC | 46-bit random |
 
-## Compared to
+## Configuration
 
-| Need | Before | Smedje |
-|---|---|---|
-| UUIDv7 | `uuidgen` (no v7 support) | `smedje uuid v7` |
-| Snowflake ID | custom script | `smedje snowflake` |
-| SSH key | `ssh-keygen -t ed25519` | `smedje ssh ed25519` |
-| TLS cert | `openssl req -x509 ...` | `smedje tls self-signed` |
-| WireGuard key | `wg genkey \| tee priv \| wg pubkey` | `smedje wireguard keypair` |
-| Password | `openssl rand -base64 24` | `smedje password` |
-| TOTP secret | online generator | `smedje totp` |
-| MAC address | `printf` one-liner | `smedje mac` |
+Smedje uses layered configuration (highest wins):
+
+1. CLI flags
+2. `--env-file` overlay
+3. `SMEDJE_*` environment variables
+4. `.smedje.toml` (project-local)
+5. `~/.config/smedje/defaults.toml`
+6. Built-in defaults
+
+```bash
+# Set user-level defaults
+smedje config set password.length 32
+smedje config set tls.days 730
+
+# Show effective config with sources
+smedje config show --explain
+```
+
+See [docs/configuration.md](docs/configuration.md) for full details.
 
 ## Install
 
@@ -62,6 +100,19 @@ go install github.com/smedje/smedje/cmd/smedje@latest
 ```
 
 Requires Go 1.23+. Single static binary, no runtime dependencies.
+
+## Shell completions
+
+```bash
+# Bash
+source <(smedje completion bash)
+
+# Zsh
+smedje completion zsh > "${fpath[1]}/_smedje"
+
+# Fish
+smedje completion fish | source
+```
 
 ## Why I built this
 
@@ -74,6 +125,8 @@ output formatting and JSON support for scripting.
 
 - [ ] More key types (RSA, ECDSA)
 - [ ] IPsec PSK generator
+- [ ] JWT key generators
+- [ ] TLS CA hierarchy
 - [ ] `--paranoid` mode (additional entropy sources)
 - [ ] Profile system (YAML-defined generation sequences)
 - [ ] TUI mode (Bubble Tea)

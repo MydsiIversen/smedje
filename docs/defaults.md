@@ -15,6 +15,7 @@ variable, or CLI flag.
 | `tls.days` | `365` | One year; matches Let's Encrypt renewal mental model |
 | `snowflake.worker` | `0` | Single-instance default; set per-machine in production |
 | `mac.format` | `colon` | Most common human-readable format (aa:bb:cc:dd:ee:ff) |
+| `nanoid.length` | `21` | Standard NanoID length providing ~126 bits of entropy |
 | `bulk.max-count` | `100000000` | Safety cap to prevent accidental OOM; override with config |
 | `bench.duration` | `2s` | Long enough for stable results without blocking interactive use |
 | `bench.warmup` | `500ms` | Warm CPU caches before measuring |
