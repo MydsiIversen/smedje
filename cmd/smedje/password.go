@@ -21,6 +21,7 @@ func init() {
 	flags.AddBulkFlags(passwordCmd)
 	flags.AddBenchFlag(passwordCmd)
 	flags.AddSeedFlags(passwordCmd)
+	flags.AddWhyFlag(passwordCmd)
 }
 
 var passwordCmd = &cobra.Command{
@@ -42,19 +43,24 @@ var passwordCmd = &cobra.Command{
 		length, _ := cmd.Flags().GetInt("length")
 		charset, _ := cmd.Flags().GetString("charset")
 
+		opts := forge.Options{
+			Count:  1,
+			Format: of.ResolveFormat(),
+			Params: map[string]string{
+				"length":  fmt.Sprintf("%d", length),
+				"charset": charset,
+			},
+		}
+		if handled, err := flags.RunWhy(cmd, g, opts); handled {
+			return err
+		}
+
 		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
 			Generator: g,
-			Opts: forge.Options{
-				Count:  1,
-				Format: of.ResolveFormat(),
-				Params: map[string]string{
-					"length":  fmt.Sprintf("%d", length),
-					"charset": charset,
-				},
-			},
-			Count:  flags.GetCount(cmd),
-			Format: of.ResolveFormat(),
-			Writer: os.Stdout,
+			Opts:      opts,
+			Count:     flags.GetCount(cmd),
+			Format:    of.ResolveFormat(),
+			Writer:    os.Stdout,
 		})
 	},
 }

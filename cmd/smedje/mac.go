@@ -19,6 +19,7 @@ func init() {
 	flags.AddBulkFlags(macCmd)
 	flags.AddBenchFlag(macCmd)
 	flags.AddSeedFlags(macCmd)
+	flags.AddWhyFlag(macCmd)
 }
 
 var macCmd = &cobra.Command{
@@ -37,9 +38,15 @@ var macCmd = &cobra.Command{
 		flags.ApplySeed(cmd)
 		defer flags.CleanupSeed(cmd)
 		of := flags.GetOutputFlags(cmd)
+		opts := forge.Options{Count: 1, Format: of.ResolveFormat()}
+
+		if handled, err := flags.RunWhy(cmd, g, opts); handled {
+			return err
+		}
+
 		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
 			Generator: g,
-			Opts:      forge.Options{Count: 1, Format: of.ResolveFormat()},
+			Opts:      opts,
 			Count:     flags.GetCount(cmd),
 			Format:    of.ResolveFormat(),
 			Writer:    os.Stdout,

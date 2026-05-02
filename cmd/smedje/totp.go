@@ -21,6 +21,7 @@ func init() {
 	flags.AddBulkFlags(totpCmd)
 	flags.AddBenchFlag(totpCmd)
 	flags.AddSeedFlags(totpCmd)
+	flags.AddWhyFlag(totpCmd)
 }
 
 var totpCmd = &cobra.Command{
@@ -44,21 +45,26 @@ var totpCmd = &cobra.Command{
 		digits, _ := cmd.Flags().GetInt("digits")
 		period, _ := cmd.Flags().GetInt("period")
 
+		opts := forge.Options{
+			Count:  1,
+			Format: of.ResolveFormat(),
+			Params: map[string]string{
+				"issuer":  issuer,
+				"account": account,
+				"digits":  fmt.Sprintf("%d", digits),
+				"period":  fmt.Sprintf("%d", period),
+			},
+		}
+		if handled, err := flags.RunWhy(cmd, g, opts); handled {
+			return err
+		}
+
 		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
 			Generator: g,
-			Opts: forge.Options{
-				Count:  1,
-				Format: of.ResolveFormat(),
-				Params: map[string]string{
-					"issuer":  issuer,
-					"account": account,
-					"digits":  fmt.Sprintf("%d", digits),
-					"period":  fmt.Sprintf("%d", period),
-				},
-			},
-			Count:  flags.GetCount(cmd),
-			Format: of.ResolveFormat(),
-			Writer: os.Stdout,
+			Opts:      opts,
+			Count:     flags.GetCount(cmd),
+			Format:    of.ResolveFormat(),
+			Writer:    os.Stdout,
 		})
 	},
 }
