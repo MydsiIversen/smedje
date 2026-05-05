@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/smedje/smedje/pkg/forge"
 )
@@ -30,14 +31,17 @@ func WriteDir(dir string, out *forge.Output, format string) ([]string, error) {
 		}
 		path := filepath.Join(dir, filename)
 
-		single := &forge.Output{
-			Name:      out.Name,
-			Artifacts: []forge.Artifact{a},
-		}
-
 		var buf bytes.Buffer
-		if err := Render(&buf, single, format); err != nil {
-			return nil, fmt.Errorf("render %s: %w", a.Label, err)
+		if isPEMOrConf(filename) {
+			writeRawArtifact(&buf, a)
+		} else {
+			single := &forge.Output{
+				Name:      out.Name,
+				Artifacts: []forge.Artifact{a},
+			}
+			if err := Render(&buf, single, format); err != nil {
+				return nil, fmt.Errorf("render %s: %w", a.Label, err)
+			}
 		}
 
 		if err := os.WriteFile(path, buf.Bytes(), 0o600); err != nil {
@@ -47,6 +51,31 @@ func WriteDir(dir string, out *forge.Output, format string) ([]string, error) {
 	}
 
 	return paths, nil
+}
+
+func isPEMOrConf(filename string) bool {
+	return strings.HasSuffix(filename, ".pem") || strings.HasSuffix(filename, ".conf")
+}
+
+// writeRawArtifact writes artifact fields as raw values suitable for PEM
+// and config files. For config-type files, only the "config" field is
+// written; for PEM files, all PEM blocks are concatenated.
+func writeRawArtifact(buf *bytes.Buffer, a forge.Artifact) {
+	for _, f := range a.Fields {
+		if strings.Contains(f.Value, "-----BEGIN ") {
+			buf.WriteString(f.Value)
+			if !strings.HasSuffix(f.Value, "\n") {
+				buf.WriteByte('\n')
+			}
+			continue
+		}
+		if f.Key == "config" {
+			buf.WriteString(f.Value)
+			if !strings.HasSuffix(f.Value, "\n") {
+				buf.WriteByte('\n')
+			}
+		}
+	}
 }
 
 func formatExtension(format string) string {
