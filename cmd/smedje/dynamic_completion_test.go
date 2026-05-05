@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	_ "github.com/smedje/smedje/pkg/forge/crypto"
 	_ "github.com/smedje/smedje/pkg/forge/id"
 	_ "github.com/smedje/smedje/pkg/forge/network"
 	_ "github.com/smedje/smedje/pkg/forge/secret"
