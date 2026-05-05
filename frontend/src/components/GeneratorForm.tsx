@@ -41,6 +41,13 @@ export function GeneratorForm({
 }: GeneratorFormProps) {
   const previewTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Stable key for preview dependencies — excludes count so slider
+  // changes don't re-fetch a new random value ("scramble" effect).
+  const previewKey = Object.entries(values)
+    .filter(([k]) => k !== "count")
+    .map(([k, v]) => `${k}=${v}`)
+    .join("&")
+
   const fetchPreview = useCallback(() => {
     const format = values["format"] || "plain"
     const seed = values["seed"] || ""
@@ -53,7 +60,8 @@ export function GeneratorForm({
     generateSingle(schema.address, params, format, seed)
       .then((result) => onPreview({ value: result.value, fields: result.fields }))
       .catch(() => onPreview(null))
-  }, [schema.address, values, onPreview])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schema.address, previewKey, onPreview])
 
   // Debounced live preview on value change.
   useEffect(() => {
