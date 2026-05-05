@@ -62,6 +62,10 @@ func init() {
 	tlsCSRCmd.Flags().String("cn", "localhost", "Common name for the CSR")
 	tlsCSRCmd.Flags().StringSlice("san", nil, "Subject alternative names (DNS or IP)")
 	tlsCSRCmd.Flags().String("algo", "ed25519", "Key algorithm (ed25519, rsa, ecdsa)")
+	tlsCSRCmd.Flags().String("org", "", "Organization name (O=)")
+	tlsCSRCmd.Flags().String("country", "", "Two-letter country code (C=)")
+	tlsCSRCmd.Flags().String("state", "", "State or province (ST=)")
+	tlsCSRCmd.Flags().String("locality", "", "City or locality (L=)")
 	flags.AddOutputFlags(tlsCSRCmd)
 	flags.AddBulkFlags(tlsCSRCmd)
 	flags.AddBenchFlag(tlsCSRCmd)
@@ -293,6 +297,10 @@ var tlsCSRCmd = &cobra.Command{
 		cn, _ := cmd.Flags().GetString("cn")
 		algo, _ := cmd.Flags().GetString("algo")
 		sans, _ := cmd.Flags().GetStringSlice("san")
+		org, _ := cmd.Flags().GetString("org")
+		country, _ := cmd.Flags().GetString("country")
+		state, _ := cmd.Flags().GetString("state")
+		locality, _ := cmd.Flags().GetString("locality")
 
 		params := map[string]string{
 			"cn":   cn,
@@ -300,6 +308,18 @@ var tlsCSRCmd = &cobra.Command{
 		}
 		if len(sans) > 0 {
 			params["san"] = strings.Join(sans, ",")
+		}
+		if org != "" {
+			params["org"] = org
+		}
+		if country != "" {
+			params["country"] = country
+		}
+		if state != "" {
+			params["state"] = state
+		}
+		if locality != "" {
+			params["locality"] = locality
 		}
 
 		opts := forge.Options{Count: 1, Format: of.ResolveFormat(), Params: params}

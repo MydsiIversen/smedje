@@ -60,6 +60,15 @@ func (c *CSR) Generate(ctx context.Context, opts forge.Options) (*forge.Output, 
 	if org, ok := opts.Params["org"]; ok && org != "" {
 		tmpl.Subject.Organization = []string{org}
 	}
+	if country, ok := opts.Params["country"]; ok && country != "" {
+		tmpl.Subject.Country = []string{country}
+	}
+	if state, ok := opts.Params["state"]; ok && state != "" {
+		tmpl.Subject.Province = []string{state}
+	}
+	if locality, ok := opts.Params["locality"]; ok && locality != "" {
+		tmpl.Subject.Locality = []string{locality}
+	}
 
 	if v, ok := opts.Params["san"]; ok && v != "" {
 		dns, ips := parseSANs(v)
@@ -92,6 +101,9 @@ func (c *CSR) Flags() []forge.FlagDef {
 		{Name: "san", Type: "string", Description: "Alternative names, comma-separated (e.g. www.example.com,example.com)"},
 		{Name: "algo", Type: "string", Default: "ed25519", Description: "Key algorithm", Options: []string{"ed25519", "rsa", "ecdsa"}},
 		{Name: "org", Type: "string", Description: "Organization name for the CSR (e.g. My Company Inc.)"},
+		{Name: "country", Type: "string", Description: "Two-letter country code (e.g. US, DE, DK)"},
+		{Name: "state", Type: "string", Description: "State or province (e.g. California)"},
+		{Name: "locality", Type: "string", Description: "City or locality (e.g. San Francisco)"},
 	}
 }
 
