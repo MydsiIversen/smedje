@@ -23,8 +23,11 @@ func init() {
 	flags.AddWhyFlag(wireguardKeypairCmd)
 
 	wireguardMeshCmd.Flags().Int("peers", 3, "Number of peers in the mesh (2-255)")
+	wireguardMeshCmd.Flags().String("subnet", "10.0.0.0/24", "Mesh subnet (e.g. 10.10.0.0/24)")
+	wireguardMeshCmd.Flags().Int("port", 51820, "WireGuard listen port")
 	wireguardMeshCmd.Flags().String("endpoint", "", "Peer endpoints (comma-separated host:port list)")
 	wireguardMeshCmd.Flags().String("dns", "", "DNS server for the Interface section")
+	wireguardMeshCmd.Flags().Int("keepalive", 0, "PersistentKeepalive interval in seconds (0 = disabled)")
 	flags.AddOutputFlags(wireguardMeshCmd)
 	flags.AddBenchFlag(wireguardMeshCmd)
 }
@@ -48,17 +51,23 @@ var wireguardMeshCmd = &cobra.Command{
 		}
 
 		peers, _ := cmd.Flags().GetInt("peers")
+		subnet, _ := cmd.Flags().GetString("subnet")
+		port, _ := cmd.Flags().GetInt("port")
 		endpoint, _ := cmd.Flags().GetString("endpoint")
 		dns, _ := cmd.Flags().GetString("dns")
+		keepalive, _ := cmd.Flags().GetInt("keepalive")
 
 		of := flags.GetOutputFlags(cmd)
 		opts := forge.Options{
 			Count:  1,
 			Format: of.ResolveFormat(),
 			Params: map[string]string{
-				"peers":    fmt.Sprintf("%d", peers),
-				"endpoint": endpoint,
-				"dns":      dns,
+				"peers":     fmt.Sprintf("%d", peers),
+				"subnet":    subnet,
+				"port":      fmt.Sprintf("%d", port),
+				"endpoint":  endpoint,
+				"dns":       dns,
+				"keepalive": fmt.Sprintf("%d", keepalive),
 			},
 		}
 
