@@ -176,6 +176,34 @@ function FlagControl({ flag, value, onChange, maxCount, isCount }: FlagControlPr
     )
   }
 
+  // Boolean flag: toggle switch.
+  if (flag.type === "bool") {
+    const checked = value === "true"
+    return (
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <label className="block text-xs text-muted-foreground">{flag.name}</label>
+          <p className="text-xs text-muted-foreground">{flag.description}</p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={checked}
+          onClick={() => onChange(checked ? "false" : "true")}
+          className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forge ${
+            checked ? "bg-forge border-forge" : "bg-panel border-border"
+          }`}
+        >
+          <span
+            className={`pointer-events-none block h-4 w-4 rounded-full bg-foreground transition-transform duration-150 ${
+              checked ? "translate-x-4" : "translate-x-0"
+            }`}
+          />
+        </button>
+      </div>
+    )
+  }
+
   // Integer flag.
   if (flag.type === "int") {
     const numVal = parseInt(value, 10) || 1
@@ -208,12 +236,13 @@ function FlagControl({ flag, value, onChange, maxCount, isCount }: FlagControlPr
     )
   }
 
-  // Default: text input.
+  // Default: text input. Use password type for sensitive fields.
+  const isSensitive = flag.name === "passphrase"
   return (
     <div>
       <label className="block text-xs text-muted-foreground mb-1">{flag.name}</label>
       <input
-        type="text"
+        type={isSensitive ? "password" : "text"}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={flag.default ?? ""}
