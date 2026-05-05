@@ -151,8 +151,8 @@ interface FlagControlProps {
 }
 
 function FlagControl({ flag, value, onChange, maxCount, isCount }: FlagControlProps) {
-  // String with options: segmented control.
-  if (flag.type === "string" && flag.options && flag.options.length > 0) {
+  // Any flag with preset options: segmented control.
+  if (flag.options && flag.options.length > 0) {
     return (
       <div>
         <label className="block text-xs text-muted-foreground mb-1">{flag.name}</label>
