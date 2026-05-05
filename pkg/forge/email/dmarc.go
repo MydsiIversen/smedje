@@ -36,6 +36,15 @@ func (d *DMARC) Generate(ctx context.Context, opts forge.Options) (*forge.Output
 	if ruf, ok := opts.Params["ruf"]; ok && ruf != "" {
 		parts = append(parts, fmt.Sprintf("ruf=mailto:%s", ruf))
 	}
+	if sp, ok := opts.Params["sp"]; ok && sp != "" {
+		parts = append(parts, fmt.Sprintf("sp=%s", sp))
+	}
+	if adkim, ok := opts.Params["adkim"]; ok && adkim != "" {
+		parts = append(parts, fmt.Sprintf("adkim=%s", adkim))
+	}
+	if aspf, ok := opts.Params["aspf"]; ok && aspf != "" {
+		parts = append(parts, fmt.Sprintf("aspf=%s", aspf))
+	}
 	if pct, ok := opts.Params["pct"]; ok && pct != "" && pct != "100" {
 		parts = append(parts, fmt.Sprintf("pct=%s", pct))
 	}
@@ -52,6 +61,9 @@ func (d *DMARC) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
 		{Name: "domain", Type: "string", Description: "Email domain (e.g. example.com) [required]"},
 		{Name: "policy", Type: "string", Default: "none", Description: "Action on auth failure: none (monitor), quarantine (spam folder), reject (block)", Options: []string{"none", "quarantine", "reject"}},
+		{Name: "sp", Type: "string", Description: "Subdomain policy (defaults to main policy if omitted)", Options: []string{"none", "quarantine", "reject"}},
+		{Name: "adkim", Type: "string", Description: "DKIM alignment mode", Options: []string{"r", "s"}},
+		{Name: "aspf", Type: "string", Description: "SPF alignment mode", Options: []string{"r", "s"}},
 		{Name: "rua", Type: "string", Description: "Email for daily aggregate reports (e.g. dmarc@example.com). mailto: added automatically"},
 		{Name: "ruf", Type: "string", Description: "Email for per-failure forensic reports. Note: Gmail/Outlook don't send these"},
 		{Name: "pct", Type: "int", Default: "100", Description: "Percentage of messages to apply policy to (1-100). Useful for gradual rollout"},

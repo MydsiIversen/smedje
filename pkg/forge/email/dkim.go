@@ -48,7 +48,16 @@ func (d *DKIM) Generate(ctx context.Context, opts forge.Options) (*forge.Output,
 		return nil, fmt.Errorf("dkim: marshal public key: %w", err)
 	}
 	pubB64 := base64.StdEncoding.EncodeToString(pubDER)
-	dnsRecord := fmt.Sprintf("v=DKIM1; k=rsa; p=%s", pubB64)
+	hash := "sha256"
+	if v, ok := opts.Params["hash"]; ok && v != "" {
+		switch v {
+		case "sha256", "sha1":
+			hash = v
+		default:
+			return nil, fmt.Errorf("dkim: unknown hash %q; choose sha256 or sha1", v)
+		}
+	}
+	dnsRecord := fmt.Sprintf("v=DKIM1; k=rsa; h=%s; p=%s", hash, pubB64)
 	dnsName := fmt.Sprintf("%s._domainkey.%s", selector, domain)
 
 	return &forge.Output{
@@ -74,6 +83,7 @@ func (d *DKIM) Flags() []forge.FlagDef {
 		{Name: "selector", Type: "string", Description: "DKIM selector — published at <selector>._domainkey.<domain> (e.g. default, mail) [required]"},
 		{Name: "domain", Type: "string", Description: "Email domain (e.g. example.com) [required]"},
 		{Name: "bits", Type: "int", Default: "2048", Description: "RSA key size. 2048 recommended; 4096 may exceed DNS TXT limits", Options: []string{"1024", "2048", "4096"}},
+		{Name: "hash", Type: "string", Default: "sha256", Description: "Hash algorithm for the DNS record h= tag", Options: []string{"sha256", "sha1"}},
 	}
 }
 

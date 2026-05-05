@@ -30,7 +30,7 @@ func TestDKIM(t *testing.T) {
 		t.Fatalf("dns name = %q, want %q", dnsName, "mail._domainkey.example.com")
 	}
 	dnsValue := out.Artifacts[1].Fields[1].Value
-	if !strings.HasPrefix(dnsValue, "v=DKIM1; k=rsa; p=") {
+	if !strings.HasPrefix(dnsValue, "v=DKIM1; k=rsa; h=sha256; p=") {
 		t.Fatalf("dns value should start with DKIM1 header, got %q", dnsValue[:30])
 	}
 }
