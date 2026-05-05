@@ -35,7 +35,27 @@ func (t *TOTP) Description() string      { return "Generate a TOTP secret and ot
 func (t *TOTP) Category() forge.Category { return forge.CategorySecret }
 
 func (t *TOTP) Generate(ctx context.Context, opts forge.Options) (*forge.Output, error) {
-	secretBytes := make([]byte, 20)
+	algorithm := "SHA1"
+	if v, ok := opts.Params["algorithm"]; ok && v != "" {
+		switch v {
+		case "SHA1", "SHA256", "SHA512":
+			algorithm = v
+		default:
+			return nil, fmt.Errorf("totp: unknown algorithm %q; choose SHA1, SHA256, or SHA512", v)
+		}
+	}
+
+	// Secret length matches HMAC block size: 20 bytes for SHA-1,
+	// 32 for SHA-256, 64 for SHA-512.
+	secretLen := 20
+	switch algorithm {
+	case "SHA256":
+		secretLen = 32
+	case "SHA512":
+		secretLen = 64
+	}
+
+	secretBytes := make([]byte, secretLen)
 	if _, err := entropy.Read(secretBytes); err != nil {
 		return nil, fmt.Errorf("totp: entropy read: %w", err)
 	}
@@ -59,13 +79,14 @@ func (t *TOTP) Generate(ctx context.Context, opts forge.Options) (*forge.Output,
 		period = v
 	}
 
-	uri := fmt.Sprintf("otpauth://totp/%s:%s?secret=%s&issuer=%s&digits=%s&period=%s",
+	uri := fmt.Sprintf("otpauth://totp/%s:%s?secret=%s&issuer=%s&digits=%s&period=%s&algorithm=%s",
 		url.PathEscape(issuer),
 		url.PathEscape(account),
 		secret,
 		url.QueryEscape(issuer),
 		digits,
 		period,
+		algorithm,
 	)
 
 	return forge.SingleArtifact("totp",
@@ -78,6 +99,7 @@ func (t *TOTP) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
 		{Name: "issuer", Type: "string", Default: "Smedje", Description: "Issuer label shown in authenticator apps"},
 		{Name: "account", Type: "string", Default: "user@example.com", Description: "Account identifier (e.g. alice@example.com)"},
+		{Name: "algorithm", Type: "string", Default: "SHA1", Description: "HMAC algorithm", Options: []string{"SHA1", "SHA256", "SHA512"}},
 		{Name: "digits", Type: "int", Default: "6", Description: "OTP code length", Options: []string{"6", "8"}},
 		{Name: "period", Type: "int", Default: "30", Description: "Time step in seconds", Options: []string{"30", "60"}},
 	}

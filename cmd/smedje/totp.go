@@ -15,6 +15,7 @@ func init() {
 
 	totpCmd.Flags().String("issuer", "Smedje", "TOTP issuer label")
 	totpCmd.Flags().String("account", "user@example.com", "TOTP account label")
+	totpCmd.Flags().String("algorithm", "SHA1", "HMAC algorithm (SHA1, SHA256, SHA512)")
 	totpCmd.Flags().Int("digits", 6, "Code length (6 or 8)")
 	totpCmd.Flags().Int("period", 30, "Time step in seconds")
 	flags.AddOutputFlags(totpCmd)
@@ -42,6 +43,7 @@ var totpCmd = &cobra.Command{
 		of := flags.GetOutputFlags(cmd)
 		issuer, _ := cmd.Flags().GetString("issuer")
 		account, _ := cmd.Flags().GetString("account")
+		algorithm, _ := cmd.Flags().GetString("algorithm")
 		digits, _ := cmd.Flags().GetInt("digits")
 		period, _ := cmd.Flags().GetInt("period")
 
@@ -49,10 +51,11 @@ var totpCmd = &cobra.Command{
 			Count:  1,
 			Format: of.ResolveFormat(),
 			Params: map[string]string{
-				"issuer":  issuer,
-				"account": account,
-				"digits":  fmt.Sprintf("%d", digits),
-				"period":  fmt.Sprintf("%d", period),
+				"issuer":    issuer,
+				"account":   account,
+				"algorithm": algorithm,
+				"digits":    fmt.Sprintf("%d", digits),
+				"period":    fmt.Sprintf("%d", period),
 			},
 		}
 		if handled, err := flags.RunWhy(cmd, g, opts); handled {
