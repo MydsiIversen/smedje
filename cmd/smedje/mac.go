@@ -15,6 +15,8 @@ import (
 func init() {
 	rootCmd.AddCommand(macCmd)
 
+	macCmd.Flags().String("style", "colon", "Separator style: colon, dash, dot")
+
 	flags.AddOutputFlags(macCmd)
 	flags.AddBulkFlags(macCmd)
 	flags.AddBenchFlag(macCmd)
@@ -38,7 +40,8 @@ var macCmd = &cobra.Command{
 		flags.ApplySeed(cmd)
 		defer flags.CleanupSeed(cmd)
 		of := flags.GetOutputFlags(cmd)
-		opts := forge.Options{Count: 1, Format: of.ResolveFormat()}
+		style, _ := cmd.Flags().GetString("style")
+		opts := forge.Options{Count: 1, Format: of.ResolveFormat(), Params: map[string]string{"style": style}}
 
 		if handled, err := flags.RunWhy(cmd, g, opts); handled {
 			return err

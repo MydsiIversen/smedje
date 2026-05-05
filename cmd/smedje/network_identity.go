@@ -53,8 +53,8 @@ var ouiMACCmd = &cobra.Command{
 			Count:  1,
 			Format: of.ResolveFormat(),
 			Params: map[string]string{
-				"oui":    oui,
-				"format": style,
+				"oui":   oui,
+				"style": style,
 			},
 		}
 		return flags.RunGenerate(cmd.Context(), flags.RunOptions{

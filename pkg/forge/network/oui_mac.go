@@ -27,12 +27,12 @@ func (o *OUIMAC) Category() forge.Category { return forge.CategoryNetwork }
 
 // Generate returns a MAC address prefixed with a vendor OUI.
 func (o *OUIMAC) Generate(ctx context.Context, opts forge.Options) (*forge.Output, error) {
-	format := "colon"
-	if v, ok := opts.Params["format"]; ok && v != "" {
-		format = v
+	style := "colon"
+	if v, ok := opts.Params["style"]; ok && v != "" {
+		style = v
 	}
-	if format != "colon" && format != "dash" && format != "dot" {
-		return nil, fmt.Errorf("oui-mac: unknown format %q; choose colon, dash, or dot", format)
+	if style != "colon" && style != "dash" && style != "dot" {
+		return nil, fmt.Errorf("oui-mac: unknown style %q; choose colon, dash, or dot", style)
 	}
 
 	var prefix string
@@ -72,7 +72,7 @@ func (o *OUIMAC) Generate(ctx context.Context, opts forge.Options) (*forge.Outpu
 		return nil, fmt.Errorf("oui-mac: entropy read: %w", err)
 	}
 
-	mac := formatMAC(addr, format)
+	mac := formatMAC(addr, style)
 	return forge.SingleArtifact("oui-mac",
 		forge.Field{Key: "value", Value: mac},
 		forge.Field{Key: "vendor", Value: vendor},
@@ -82,7 +82,7 @@ func (o *OUIMAC) Generate(ctx context.Context, opts forge.Options) (*forge.Outpu
 func (o *OUIMAC) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
 		{Name: "oui", Type: "string", Description: "Vendor OUI prefix (e.g. 00:50:56 for VMware). Random vendor if empty"},
-		{Name: "format", Type: "string", Default: "colon", Description: "Output style: colon (aa:bb:cc), dash (aa-bb-cc), dot (aabb.ccdd Cisco)", Options: []string{"colon", "dash", "dot"}},
+		{Name: "style", Type: "string", Default: "colon", Description: "Separator style: colon (aa:bb:cc), dash (aa-bb-cc), dot (aabb.ccdd Cisco)", Options: []string{"colon", "dash", "dot"}},
 	}
 }
 

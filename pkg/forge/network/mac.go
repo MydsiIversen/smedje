@@ -25,6 +25,14 @@ func (m *MAC) Description() string      { return "Generate a random locally-admi
 func (m *MAC) Category() forge.Category { return forge.CategoryNetwork }
 
 func (m *MAC) Generate(ctx context.Context, opts forge.Options) (*forge.Output, error) {
+	style := "colon"
+	if v, ok := opts.Params["style"]; ok && v != "" {
+		style = v
+	}
+	if style != "colon" && style != "dash" && style != "dot" {
+		return nil, fmt.Errorf("mac: unknown style %q; choose colon, dash, or dot", style)
+	}
+
 	var addr [6]byte
 	if _, err := entropy.Read(addr[:]); err != nil {
 		return nil, fmt.Errorf("mac: entropy read: %w", err)
@@ -32,13 +40,12 @@ func (m *MAC) Generate(ctx context.Context, opts forge.Options) (*forge.Output, 
 
 	addr[0] = (addr[0] | 0x02) & 0xFE
 
-	return forge.SingleArtifact("mac", forge.Field{Key: "value", Value: fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x",
-		addr[0], addr[1], addr[2], addr[3], addr[4], addr[5])}), nil
+	return forge.SingleArtifact("mac", forge.Field{Key: "value", Value: formatMAC(addr, style)}), nil
 }
 
 func (m *MAC) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
-		{Name: "format", Type: "string", Default: "colon", Description: "MAC address format",
+		{Name: "style", Type: "string", Default: "colon", Description: "Separator style: colon (aa:bb:cc), dash (aa-bb-cc), dot (aabb.ccdd Cisco)",
 			Options: []string{"colon", "dash", "dot"}},
 	}
 }
