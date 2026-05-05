@@ -29,12 +29,7 @@ func (u *ULID) Generate(ctx context.Context, opts forge.Options) (*forge.Output,
 	if err != nil {
 		return nil, err
 	}
-	return &forge.Output{
-		Name: "ulid",
-		Fields: []forge.Field{
-			{Key: "value", Value: id},
-		},
-	}, nil
+	return forge.SingleArtifact("ulid", forge.Field{Key: "value", Value: id}), nil
 }
 
 func (u *ULID) Bench(ctx context.Context) (*forge.BenchResult, error) {

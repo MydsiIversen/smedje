@@ -99,13 +99,18 @@ func (s *SelfSigned) Generate(ctx context.Context, opts forge.Options) (*forge.O
 	}
 	keyPEM := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privBytes})
 
-	return &forge.Output{
-		Name: "tls",
-		Fields: []forge.Field{
-			{Key: "certificate", Value: string(certPEM)},
-			{Key: "private-key", Value: string(keyPEM), Sensitive: true},
-		},
-	}, nil
+	return forge.SingleArtifact("tls",
+		forge.Field{Key: "certificate", Value: string(certPEM)},
+		forge.Field{Key: "private-key", Value: string(keyPEM), Sensitive: true},
+	), nil
+}
+
+func (s *SelfSigned) Flags() []forge.FlagDef {
+	return []forge.FlagDef{
+		{Name: "cn", Type: "string", Default: "localhost", Description: "Common name"},
+		{Name: "days", Type: "int", Default: "825", Description: "Validity in days"},
+		{Name: "san", Type: "string", Description: "Subject alternative names (comma-separated)"},
+	}
 }
 
 func (s *SelfSigned) Bench(ctx context.Context) (*forge.BenchResult, error) {

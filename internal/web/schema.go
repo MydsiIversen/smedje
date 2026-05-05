@@ -103,42 +103,23 @@ var commonFlags = []FlagDef{
 	},
 }
 
-// generatorFlags returns the known flags for a generator. This is a manual
-// mapping because generators don't self-describe their flags.
+// generatorFlags returns the flags for a generator. Common flags (count,
+// format) are always included; generator-specific flags come from the
+// FlagDescriber interface when the generator implements it.
 func generatorFlags(g forge.Generator) []FlagDef {
 	flags := make([]FlagDef, len(commonFlags))
 	copy(flags, commonFlags)
 
-	addr := forge.Address(g)
-	group := g.Group()
-
-	switch {
-	case addr == "password":
-		flags = append(flags,
-			FlagDef{Name: "length", Type: "int", Default: "24", Description: "Password length (8-256)"},
-			FlagDef{Name: "charset", Type: "string", Default: "full", Description: "Character set to use", Options: []string{"full", "alphanum", "alpha", "numeric", "hex"}},
-		)
-	case addr == "snowflake":
-		flags = append(flags,
-			FlagDef{Name: "worker", Type: "int", Default: "0", Description: "Worker ID (0-1023)"},
-		)
-	case addr == "nanoid":
-		flags = append(flags,
-			FlagDef{Name: "length", Type: "int", Default: "21", Description: "ID length (1-256)"},
-			FlagDef{Name: "alphabet", Type: "string", Description: "Custom alphabet (min 2 characters)"},
-		)
-	case addr == "mac":
-		flags = append(flags,
-			FlagDef{Name: "format", Type: "string", Default: "colon", Description: "MAC address format", Options: []string{"colon", "dash", "dot"}},
-		)
-	case addr == "tls.self-signed":
-		flags = append(flags,
-			FlagDef{Name: "cn", Type: "string", Default: "localhost", Description: "Common name for the certificate"},
-			FlagDef{Name: "days", Type: "int", Default: "825", Description: "Certificate validity in days"},
-			FlagDef{Name: "san", Type: "string", Description: "Subject alternative names (comma-separated)"},
-		)
-	case group == "uuid" || addr == "ulid":
-		// No extra flags beyond common ones.
+	if fd, ok := g.(forge.FlagDescriber); ok {
+		for _, f := range fd.Flags() {
+			flags = append(flags, FlagDef{
+				Name:        f.Name,
+				Type:        f.Type,
+				Default:     f.Default,
+				Description: f.Description,
+				Options:     f.Options,
+			})
+		}
 	}
 
 	return flags
@@ -174,8 +155,8 @@ func generatorExampleOutput(g forge.Generator) interface{} {
 	if err != nil {
 		return nil
 	}
-	fields := make(map[string]string, len(out.Fields))
-	for _, f := range out.Fields {
+	fields := make(map[string]string, len(out.PrimaryFields()))
+	for _, f := range out.PrimaryFields() {
 		fields[f.Key] = f.Value
 	}
 	return fields

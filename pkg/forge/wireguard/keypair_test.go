@@ -15,12 +15,12 @@ func TestKeypairGenerate(t *testing.T) {
 		t.Fatalf("Generate failed: %v", err)
 	}
 
-	if len(out.Fields) != 2 {
-		t.Fatalf("expected 2 fields, got %d", len(out.Fields))
+	if len(out.PrimaryFields()) != 2 {
+		t.Fatalf("expected 2 fields, got %d", len(out.PrimaryFields()))
 	}
 
-	privField := out.Fields[0]
-	pubField := out.Fields[1]
+	privField := out.PrimaryFields()[0]
+	pubField := out.PrimaryFields()[1]
 
 	if !privField.Sensitive {
 		t.Error("private key should be marked sensitive")
@@ -50,7 +50,7 @@ func TestKeypairClamping(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		privBytes, _ := base64.StdEncoding.DecodeString(out.Fields[0].Value)
+		privBytes, _ := base64.StdEncoding.DecodeString(out.PrimaryFields()[0].Value)
 		if privBytes[0]&7 != 0 {
 			t.Errorf("iteration %d: low 3 bits of priv[0] not cleared", i)
 		}
@@ -71,7 +71,7 @@ func TestKeypairUniqueness(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		pub := out.Fields[1].Value
+		pub := out.PrimaryFields()[1].Value
 		if _, exists := keys[pub]; exists {
 			t.Fatalf("duplicate key at iteration %d", i)
 		}

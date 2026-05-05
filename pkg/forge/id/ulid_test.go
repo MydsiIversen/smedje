@@ -13,7 +13,7 @@ func TestULIDFormat(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	val := out.Fields[0].Value
+	val := out.PrimaryFields()[0].Value
 	if len(val) != 26 {
 		t.Errorf("expected 26 chars, got %d: %s", len(val), val)
 	}
@@ -34,7 +34,7 @@ func TestULIDTimestampSortable(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		val := out.Fields[0].Value
+		val := out.PrimaryFields()[0].Value
 		ts := val[:10]
 		if prev != "" && ts < prev {
 			t.Errorf("timestamp prefix not sorted: %s < %s", ts, prev)

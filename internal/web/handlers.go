@@ -550,16 +550,16 @@ func isBatchFormat(format string) bool {
 
 // outputToArtifact converts a forge.Output to an sseArtifact.
 func outputToArtifact(out *forge.Output) sseArtifact {
-	fields := make(map[string]string, len(out.Fields))
+	fields := make(map[string]string, len(out.PrimaryFields()))
 	var value string
-	for _, f := range out.Fields {
+	for _, f := range out.PrimaryFields() {
 		fields[f.Key] = f.Value
 		if f.Key == "value" {
 			value = f.Value
 		}
 	}
-	if value == "" && len(out.Fields) > 0 {
-		value = out.Fields[0].Value
+	if value == "" && len(out.PrimaryFields()) > 0 {
+		value = out.PrimaryFields()[0].Value
 	}
 	return sseArtifact{Value: value, Fields: fields}
 }

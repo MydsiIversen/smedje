@@ -55,12 +55,7 @@ func (u *UUIDv6) Generate(ctx context.Context, opts forge.Options) (*forge.Outpu
 	node[0] |= 0x01
 	copy(uuid[10:16], node[:])
 
-	return &forge.Output{
-		Name: "uuid",
-		Fields: []forge.Field{
-			{Key: "value", Value: formatUUID(uuid)},
-		},
-	}, nil
+	return forge.SingleArtifact("uuid", forge.Field{Key: "value", Value: formatUUID(uuid)}), nil
 }
 
 func (u *UUIDv6) Bench(ctx context.Context) (*forge.BenchResult, error) {

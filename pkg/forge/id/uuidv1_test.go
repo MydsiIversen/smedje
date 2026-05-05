@@ -13,7 +13,7 @@ func TestUUIDv1Format(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	val := out.Fields[0].Value
+	val := out.PrimaryFields()[0].Value
 	if len(val) != 36 {
 		t.Errorf("expected 36 chars, got %d: %s", len(val), val)
 	}
@@ -36,7 +36,7 @@ func TestUUIDv1Uniqueness(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		val := out.Fields[0].Value
+		val := out.PrimaryFields()[0].Value
 		if seen[val] {
 			t.Fatalf("duplicate UUID: %s", val)
 		}

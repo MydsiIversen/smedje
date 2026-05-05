@@ -16,12 +16,12 @@ func TestTOTPGenerate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(out.Fields) != 2 {
-		t.Fatalf("expected 2 fields, got %d", len(out.Fields))
+	if len(out.PrimaryFields()) != 2 {
+		t.Fatalf("expected 2 fields, got %d", len(out.PrimaryFields()))
 	}
 
-	secretField := out.Fields[0]
-	uriField := out.Fields[1]
+	secretField := out.PrimaryFields()[0]
+	uriField := out.PrimaryFields()[1]
 
 	if !secretField.Sensitive {
 		t.Error("secret should be marked sensitive")
@@ -58,7 +58,7 @@ func TestTOTPCustomParams(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	uri := out.Fields[1].Value
+	uri := out.PrimaryFields()[1].Value
 	if !strings.Contains(uri, "MyApp") {
 		t.Error("URI should contain issuer")
 	}
@@ -81,7 +81,7 @@ func TestTOTPUniqueness(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		s := out.Fields[0].Value
+		s := out.PrimaryFields()[0].Value
 		if _, exists := secrets[s]; exists {
 			t.Fatalf("duplicate secret at iteration %d", i)
 		}

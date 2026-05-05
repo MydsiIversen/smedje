@@ -13,7 +13,7 @@ func TestUUIDv4Format(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	val := out.Fields[0].Value
+	val := out.PrimaryFields()[0].Value
 	if len(val) != 36 {
 		t.Errorf("expected 36 chars, got %d: %s", len(val), val)
 	}
@@ -34,9 +34,9 @@ func TestUUIDv4Uniqueness(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if seen[out.Fields[0].Value] {
+		if seen[out.PrimaryFields()[0].Value] {
 			t.Fatal("duplicate")
 		}
-		seen[out.Fields[0].Value] = true
+		seen[out.PrimaryFields()[0].Value] = true
 	}
 }

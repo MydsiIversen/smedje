@@ -15,7 +15,7 @@ func TestSnowflakeFormat(t *testing.T) {
 		t.Fatalf("Generate failed: %v", err)
 	}
 
-	val := out.Fields[0].Value
+	val := out.PrimaryFields()[0].Value
 	n, err := strconv.ParseInt(val, 10, 64)
 	if err != nil {
 		t.Fatalf("output %q is not a valid int64: %v", val, err)
@@ -33,7 +33,7 @@ func TestSnowflakeUniqueness(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Generate failed: %v", err)
 		}
-		val := out.Fields[0].Value
+		val := out.PrimaryFields()[0].Value
 		if _, exists := seen[val]; exists {
 			t.Fatalf("duplicate snowflake at iteration %d: %s", i, val)
 		}
@@ -49,7 +49,7 @@ func TestSnowflakeWorkerID(t *testing.T) {
 		t.Fatalf("Generate failed: %v", err)
 	}
 
-	n, _ := strconv.ParseInt(out.Fields[0].Value, 10, 64)
+	n, _ := strconv.ParseInt(out.PrimaryFields()[0].Value, 10, 64)
 	worker := (n >> 12) & 0x3FF
 	if worker != 42 {
 		t.Errorf("worker bits = %d, want 42", worker)
@@ -65,6 +65,18 @@ func TestSnowflakeWorkerValidation(t *testing.T) {
 		if err == nil {
 			t.Errorf("worker=%q should have failed", w)
 		}
+	}
+}
+
+func TestSnowflakeFlags(t *testing.T) {
+	g := &Snowflake{}
+	fd, ok := (forge.Generator)(g).(forge.FlagDescriber)
+	if !ok {
+		t.Fatal("Snowflake does not implement FlagDescriber")
+	}
+	flags := fd.Flags()
+	if len(flags) != 1 {
+		t.Fatalf("got %d flags, want 1", len(flags))
 	}
 }
 

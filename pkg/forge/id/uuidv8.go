@@ -35,12 +35,7 @@ func (u *UUIDv8) Generate(ctx context.Context, opts forge.Options) (*forge.Outpu
 	// Variant 10
 	uuid[8] = (uuid[8] & 0x3F) | 0x80
 
-	return &forge.Output{
-		Name: "uuid",
-		Fields: []forge.Field{
-			{Key: "value", Value: formatUUID(uuid)},
-		},
-	}, nil
+	return forge.SingleArtifact("uuid", forge.Field{Key: "value", Value: formatUUID(uuid)}), nil
 }
 
 func (u *UUIDv8) Bench(ctx context.Context) (*forge.BenchResult, error) {

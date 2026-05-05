@@ -52,6 +52,7 @@ var sshEd25519Cmd = &cobra.Command{
 			Opts:      opts,
 			Count:     flags.GetCount(cmd),
 			Format:    of.ResolveFormat(),
+			OutputDir: of.OutputDir,
 			Writer:    os.Stdout,
 		})
 	},

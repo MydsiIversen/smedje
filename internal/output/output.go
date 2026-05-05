@@ -12,13 +12,37 @@ import (
 
 // Text writes human-readable output.
 func Text(w io.Writer, o *forge.Output) error {
-	if len(o.Fields) == 1 {
-		_, err := fmt.Fprintln(w, o.Fields[0].Value)
-		return err
-	}
-	for _, f := range o.Fields {
-		if _, err := fmt.Fprintf(w, "%s: %s\n", f.Key, f.Value); err != nil {
+	if len(o.Artifacts) <= 1 {
+		fields := o.PrimaryFields()
+		if len(fields) == 1 {
+			_, err := fmt.Fprintln(w, fields[0].Value)
 			return err
+		}
+		for _, f := range fields {
+			if _, err := fmt.Fprintf(w, "%s: %s\n", f.Key, f.Value); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	// Multi-artifact: header per artifact.
+	for i, a := range o.Artifacts {
+		if i > 0 {
+			fmt.Fprintln(w)
+		}
+		label := a.Label
+		if label == "" {
+			label = fmt.Sprintf("artifact-%d", i+1)
+		}
+		fmt.Fprintf(w, "--- %s ---\n", label)
+		if len(a.Fields) == 1 {
+			fmt.Fprintln(w, a.Fields[0].Value)
+		} else {
+			for _, f := range a.Fields {
+				if _, err := fmt.Fprintf(w, "%s: %s\n", f.Key, f.Value); err != nil {
+					return err
+				}
+			}
 		}
 	}
 	return nil
@@ -26,9 +50,23 @@ func Text(w io.Writer, o *forge.Output) error {
 
 // Quiet writes only the raw values, one per line.
 func Quiet(w io.Writer, o *forge.Output) error {
-	for _, f := range o.Fields {
-		if _, err := fmt.Fprintln(w, f.Value); err != nil {
-			return err
+	if len(o.Artifacts) <= 1 {
+		for _, f := range o.PrimaryFields() {
+			if _, err := fmt.Fprintln(w, f.Value); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	// Multi-artifact: blank line between artifacts.
+	for i, a := range o.Artifacts {
+		if i > 0 {
+			fmt.Fprintln(w)
+		}
+		for _, f := range a.Fields {
+			if _, err := fmt.Fprintln(w, f.Value); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -36,22 +74,63 @@ func Quiet(w io.Writer, o *forge.Output) error {
 
 // JSON writes structured JSON output.
 func JSON(w io.Writer, o *forge.Output) error {
-	m := make(map[string]string, len(o.Fields))
-	for _, f := range o.Fields {
-		m[f.Key] = f.Value
-	}
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
-	return enc.Encode(m)
+
+	if len(o.Artifacts) <= 1 {
+		fields := o.PrimaryFields()
+		m := make(map[string]string, len(fields))
+		for _, f := range fields {
+			m[f.Key] = f.Value
+		}
+		return enc.Encode(m)
+	}
+	// Multi-artifact: array of {label, fields}.
+	type artifactJSON struct {
+		Label  string            `json:"label"`
+		Fields map[string]string `json:"fields"`
+	}
+	items := make([]artifactJSON, 0, len(o.Artifacts))
+	for _, a := range o.Artifacts {
+		m := make(map[string]string, len(a.Fields))
+		for _, f := range a.Fields {
+			m[f.Key] = f.Value
+		}
+		label := a.Label
+		if label == "" {
+			label = "artifact"
+		}
+		items = append(items, artifactJSON{Label: label, Fields: m})
+	}
+	return enc.Encode(items)
 }
 
 // Env writes output as KEY=VALUE lines suitable for shell eval.
 func Env(w io.Writer, o *forge.Output, prefix string) error {
-	for _, f := range o.Fields {
-		key := strings.ToUpper(prefix + "_" + f.Key)
-		key = strings.ReplaceAll(key, "-", "_")
-		if _, err := fmt.Fprintf(w, "%s=%s\n", key, f.Value); err != nil {
-			return err
+	if len(o.Artifacts) <= 1 {
+		for _, f := range o.PrimaryFields() {
+			key := strings.ToUpper(prefix + "_" + f.Key)
+			key = strings.ReplaceAll(key, "-", "_")
+			if _, err := fmt.Fprintf(w, "%s=%s\n", key, f.Value); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	// Multi-artifact: label becomes part of the prefix.
+	for _, a := range o.Artifacts {
+		label := a.Label
+		if label == "" {
+			label = "artifact"
+		}
+		artPrefix := strings.ToUpper(label)
+		artPrefix = strings.ReplaceAll(artPrefix, "-", "_")
+		for _, f := range a.Fields {
+			key := artPrefix + "_" + strings.ToUpper(f.Key)
+			key = strings.ReplaceAll(key, "-", "_")
+			if _, err := fmt.Fprintf(w, "%s=%s\n", key, f.Value); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -59,9 +138,20 @@ func Env(w io.Writer, o *forge.Output, prefix string) error {
 
 // PEM writes PEM-encoded values as-is (they already contain headers).
 func PEM(w io.Writer, o *forge.Output) error {
-	for _, f := range o.Fields {
-		if _, err := fmt.Fprint(w, f.Value); err != nil {
-			return err
+	if len(o.Artifacts) <= 1 {
+		for _, f := range o.PrimaryFields() {
+			if _, err := fmt.Fprint(w, f.Value); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	// Multi-artifact: concatenate in order.
+	for _, a := range o.Artifacts {
+		for _, f := range a.Fields {
+			if _, err := fmt.Fprint(w, f.Value); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -113,8 +203,9 @@ type BatchOptions struct {
 func jsonBatch(w io.Writer, outputs []*forge.Output) error {
 	items := make([]map[string]string, 0, len(outputs))
 	for _, o := range outputs {
-		m := make(map[string]string, len(o.Fields))
-		for _, f := range o.Fields {
+		fields := o.PrimaryFields()
+		m := make(map[string]string, len(fields))
+		for _, f := range fields {
 			m[f.Key] = f.Value
 		}
 		items = append(items, m)
@@ -130,11 +221,12 @@ func csvBatch(w io.Writer, outputs []*forge.Output) error {
 	}
 	// Header: for single-field generators use the output name (group name)
 	// as the column header; for multi-field use the field keys.
+	firstFields := outputs[0].PrimaryFields()
 	var headers []string
-	if len(outputs[0].Fields) == 1 {
+	if len(firstFields) == 1 {
 		headers = []string{outputs[0].Name}
 	} else {
-		for _, f := range outputs[0].Fields {
+		for _, f := range firstFields {
 			headers = append(headers, f.Key)
 		}
 	}
@@ -142,7 +234,7 @@ func csvBatch(w io.Writer, outputs []*forge.Output) error {
 
 	for _, o := range outputs {
 		var vals []string
-		for _, f := range o.Fields {
+		for _, f := range o.PrimaryFields() {
 			vals = append(vals, csvEscape(f.Value))
 		}
 		fmt.Fprintln(w, strings.Join(vals, ","))
@@ -165,15 +257,16 @@ func sqlBatch(w io.Writer, outputs []*forge.Output, table string) error {
 		table = outputs[0].Name
 	}
 
+	firstFields := outputs[0].PrimaryFields()
 	var cols []string
-	for _, f := range outputs[0].Fields {
+	for _, f := range firstFields {
 		cols = append(cols, f.Key)
 	}
 
 	fmt.Fprintf(w, "INSERT INTO %s (%s) VALUES\n", table, strings.Join(cols, ", "))
 	for i, o := range outputs {
 		var vals []string
-		for _, f := range o.Fields {
+		for _, f := range o.PrimaryFields() {
 			vals = append(vals, "'"+strings.ReplaceAll(f.Value, "'", "''")+"'")
 		}
 		sep := ","
@@ -187,9 +280,10 @@ func sqlBatch(w io.Writer, outputs []*forge.Output, table string) error {
 
 func envBatch(w io.Writer, outputs []*forge.Output) error {
 	for i, o := range outputs {
+		fields := o.PrimaryFields()
 		prefix := fmt.Sprintf("%s_%d", strings.ToUpper(o.Name), i+1)
 		prefix = strings.ReplaceAll(prefix, "-", "_")
-		for _, f := range o.Fields {
+		for _, f := range fields {
 			key := prefix + "_" + strings.ToUpper(f.Key)
 			key = strings.ReplaceAll(key, "-", "_")
 			fmt.Fprintf(w, "%s=%s\n", key, f.Value)

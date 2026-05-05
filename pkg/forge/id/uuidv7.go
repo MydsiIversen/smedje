@@ -31,12 +31,7 @@ func (u *UUIDv7) Generate(ctx context.Context, opts forge.Options) (*forge.Outpu
 	if err != nil {
 		return nil, err
 	}
-	return &forge.Output{
-		Name: "uuid",
-		Fields: []forge.Field{
-			{Key: "value", Value: formatUUID(id)},
-		},
-	}, nil
+	return forge.SingleArtifact("uuid", forge.Field{Key: "value", Value: formatUUID(id)}), nil
 }
 
 func (u *UUIDv7) Bench(ctx context.Context) (*forge.BenchResult, error) {

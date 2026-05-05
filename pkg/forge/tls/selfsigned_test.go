@@ -17,12 +17,12 @@ func TestSelfSignedGenerate(t *testing.T) {
 		t.Fatalf("Generate failed: %v", err)
 	}
 
-	if len(out.Fields) != 2 {
-		t.Fatalf("expected 2 fields, got %d", len(out.Fields))
+	if len(out.PrimaryFields()) != 2 {
+		t.Fatalf("expected 2 fields, got %d", len(out.PrimaryFields()))
 	}
 
-	certField := out.Fields[0]
-	keyField := out.Fields[1]
+	certField := out.PrimaryFields()[0]
+	keyField := out.PrimaryFields()[1]
 
 	if !strings.Contains(certField.Value, "BEGIN CERTIFICATE") {
 		t.Error("certificate missing PEM header")
@@ -42,7 +42,7 @@ func TestSelfSignedParseable(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	block, _ := pem.Decode([]byte(out.Fields[0].Value))
+	block, _ := pem.Decode([]byte(out.PrimaryFields()[0].Value))
 	if block == nil {
 		t.Fatal("failed to decode certificate PEM")
 	}
@@ -70,7 +70,7 @@ func TestSelfSignedWithSANs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	block, _ := pem.Decode([]byte(out.Fields[0].Value))
+	block, _ := pem.Decode([]byte(out.PrimaryFields()[0].Value))
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
 		t.Fatal(err)
@@ -81,6 +81,18 @@ func TestSelfSignedWithSANs(t *testing.T) {
 	}
 	if len(cert.IPAddresses) != 1 {
 		t.Errorf("expected 1 IP SAN, got %d", len(cert.IPAddresses))
+	}
+}
+
+func TestSelfSignedFlags(t *testing.T) {
+	g := &SelfSigned{}
+	fd, ok := (forge.Generator)(g).(forge.FlagDescriber)
+	if !ok {
+		t.Fatal("SelfSigned does not implement FlagDescriber")
+	}
+	flags := fd.Flags()
+	if len(flags) != 3 {
+		t.Fatalf("got %d flags, want 3", len(flags))
 	}
 }
 

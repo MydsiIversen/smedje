@@ -53,12 +53,14 @@ func (n *NanoID) Generate(ctx context.Context, opts forge.Options) (*forge.Outpu
 		return nil, err
 	}
 
-	return &forge.Output{
-		Name: "nanoid",
-		Fields: []forge.Field{
-			{Key: "value", Value: id},
-		},
-	}, nil
+	return forge.SingleArtifact("nanoid", forge.Field{Key: "value", Value: id}), nil
+}
+
+func (n *NanoID) Flags() []forge.FlagDef {
+	return []forge.FlagDef{
+		{Name: "length", Type: "int", Default: "21", Description: "ID length (1-256)"},
+		{Name: "alphabet", Type: "string", Description: "Custom alphabet (min 2 characters)"},
+	}
 }
 
 func (n *NanoID) Bench(ctx context.Context) (*forge.BenchResult, error) {

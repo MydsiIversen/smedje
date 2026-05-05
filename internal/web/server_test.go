@@ -278,6 +278,34 @@ func TestPrivacyPage(t *testing.T) {
 	}
 }
 
+func TestGetGeneratorSchemaHasDynamicFlags(t *testing.T) {
+	s := testServer()
+	req := httptest.NewRequest("GET", "/api/generators/password", nil)
+	w := httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+
+	if w.Code != 200 {
+		t.Fatalf("got %d, want 200", w.Code)
+	}
+
+	var schema GeneratorSchema
+	if err := json.Unmarshal(w.Body.Bytes(), &schema); err != nil {
+		t.Fatal(err)
+	}
+
+	flagNames := map[string]bool{}
+	for _, f := range schema.Flags {
+		flagNames[f.Name] = true
+	}
+
+	if !flagNames["count"] || !flagNames["format"] {
+		t.Error("missing common flags")
+	}
+	if !flagNames["length"] || !flagNames["charset"] {
+		t.Errorf("missing password-specific flags from FlagDescriber, got %v", flagNames)
+	}
+}
+
 func TestAnalyticsTagParsing(t *testing.T) {
 	tests := []struct {
 		name   string

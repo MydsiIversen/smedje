@@ -20,12 +20,7 @@ func (u *UUIDNil) Description() string      { return "Output the nil UUID (all z
 func (u *UUIDNil) Category() forge.Category { return forge.CategoryID }
 
 func (u *UUIDNil) Generate(ctx context.Context, opts forge.Options) (*forge.Output, error) {
-	return &forge.Output{
-		Name: "uuid",
-		Fields: []forge.Field{
-			{Key: "value", Value: "00000000-0000-0000-0000-000000000000"},
-		},
-	}, nil
+	return forge.SingleArtifact("uuid", forge.Field{Key: "value", Value: "00000000-0000-0000-0000-000000000000"}), nil
 }
 
 func (u *UUIDNil) Bench(ctx context.Context) (*forge.BenchResult, error) {
@@ -41,12 +36,7 @@ func (u *UUIDMax) Description() string      { return "Output the max UUID (all o
 func (u *UUIDMax) Category() forge.Category { return forge.CategoryID }
 
 func (u *UUIDMax) Generate(ctx context.Context, opts forge.Options) (*forge.Output, error) {
-	return &forge.Output{
-		Name: "uuid",
-		Fields: []forge.Field{
-			{Key: "value", Value: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
-		},
-	}, nil
+	return forge.SingleArtifact("uuid", forge.Field{Key: "value", Value: "ffffffff-ffff-ffff-ffff-ffffffffffff"}), nil
 }
 
 func (u *UUIDMax) Bench(ctx context.Context) (*forge.BenchResult, error) {

@@ -13,7 +13,7 @@ func TestUUIDv6Format(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	val := out.Fields[0].Value
+	val := out.PrimaryFields()[0].Value
 	if len(val) != 36 {
 		t.Errorf("expected 36 chars, got %d: %s", len(val), val)
 	}
@@ -34,7 +34,7 @@ func TestUUIDv6Sortable(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		val := out.Fields[0].Value
+		val := out.PrimaryFields()[0].Value
 		if prev != "" && val < prev {
 			t.Errorf("not sorted: %s < %s", val, prev)
 		}

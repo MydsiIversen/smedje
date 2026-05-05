@@ -39,13 +39,10 @@ func (k *Keypair) Generate(ctx context.Context, opts forge.Options) (*forge.Outp
 		return nil, err
 	}
 
-	return &forge.Output{
-		Name: "wireguard",
-		Fields: []forge.Field{
-			{Key: "private-key", Value: base64.StdEncoding.EncodeToString(priv[:]), Sensitive: true},
-			{Key: "public-key", Value: base64.StdEncoding.EncodeToString(pub)},
-		},
-	}, nil
+	return forge.SingleArtifact("wireguard",
+		forge.Field{Key: "private-key", Value: base64.StdEncoding.EncodeToString(priv[:]), Sensitive: true},
+		forge.Field{Key: "public-key", Value: base64.StdEncoding.EncodeToString(pub)},
+	), nil
 }
 
 func (k *Keypair) Bench(ctx context.Context) (*forge.BenchResult, error) {

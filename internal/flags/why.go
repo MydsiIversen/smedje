@@ -35,7 +35,7 @@ func RunWhy(cmd *cobra.Command, g forge.Generator, opts forge.Options) (bool, er
 	}
 
 	w := io.Writer(os.Stdout)
-	for _, f := range out.Fields {
+	for _, f := range out.PrimaryFields() {
 		if f.Key == "value" {
 			fmt.Fprintln(w, f.Value)
 		} else {

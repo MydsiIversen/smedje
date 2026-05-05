@@ -38,14 +38,50 @@ type Options struct {
 	Time func() time.Time
 }
 
-// Output is the result of a single Generate call.
+// Output is the result of a single Generate call. It contains one or more
+// Artifacts, each holding its own set of Fields. Single-value generators
+// use SingleArtifact; compound generators (e.g., a CA chain) populate
+// multiple Artifacts directly.
 type Output struct {
 	// Name identifies what was generated (e.g., "uuidv7", "ed25519-keypair").
 	Name string
 
+	// Artifacts holds the generated artifacts in display order.
+	Artifacts []Artifact
+}
+
+// PrimaryFields returns the Fields of the first Artifact, or nil if there
+// are no artifacts. This is the common accessor for single-artifact output.
+func (o *Output) PrimaryFields() []Field {
+	if len(o.Artifacts) == 0 {
+		return nil
+	}
+	return o.Artifacts[0].Fields
+}
+
+// Artifact is a single logical artifact within an Output. A keypair generator
+// produces one artifact with key + public key fields; a CA chain generator
+// produces one artifact per certificate.
+type Artifact struct {
+	// Label identifies this artifact within its Output (e.g., "root-ca",
+	// "leaf"). Empty for single-artifact outputs.
+	Label string
+
+	// Filename overrides the default file name when writing to --output-dir.
+	// If empty, the label plus a format-dependent extension is used.
+	Filename string
+
 	// Fields holds the generated values in display order.
-	// For single-value generators, use one entry with key "value".
 	Fields []Field
+}
+
+// SingleArtifact is a convenience constructor for the common case of an
+// Output containing exactly one unnamed artifact.
+func SingleArtifact(name string, fields ...Field) *Output {
+	return &Output{
+		Name:      name,
+		Artifacts: []Artifact{{Fields: fields}},
+	}
 }
 
 // Field is a single named value in generator output.
@@ -69,6 +105,33 @@ type BenchResult struct {
 // Explainer is optionally implemented by generators that support --why.
 type Explainer interface {
 	Why() string
+}
+
+// FlagDef describes a single generator-specific flag for CLI wiring and
+// the web UI. Generators that accept extra flags beyond the standard set
+// implement FlagDescriber.
+type FlagDef struct {
+	// Name is the flag name as it appears on the CLI (e.g., "length").
+	Name string
+
+	// Type is the flag's value type: "int", "string", "bool".
+	Type string
+
+	// Default is the stringified default value.
+	Default string
+
+	// Description is a one-line help string.
+	Description string
+
+	// Options lists allowed values when the flag is an enum. Nil means
+	// any value of the declared Type is accepted.
+	Options []string
+}
+
+// FlagDescriber is optionally implemented by generators that accept
+// flags beyond the standard Count/Format/Params set.
+type FlagDescriber interface {
+	Flags() []FlagDef
 }
 
 // Generator is the interface every forge generator implements.

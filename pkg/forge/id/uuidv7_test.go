@@ -19,7 +19,7 @@ func TestUUIDv7Format(t *testing.T) {
 		t.Fatalf("Generate failed: %v", err)
 	}
 
-	val := out.Fields[0].Value
+	val := out.PrimaryFields()[0].Value
 	if !uuidPattern.MatchString(val) {
 		t.Errorf("output %q does not match UUIDv7 pattern", val)
 	}
@@ -32,7 +32,7 @@ func TestUUIDv7VersionAndVariant(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Generate failed: %v", err)
 		}
-		val := out.Fields[0].Value
+		val := out.PrimaryFields()[0].Value
 
 		// Version nibble is at position 14 (0-indexed in the hex string without dashes).
 		noDash := strings.ReplaceAll(val, "-", "")
@@ -56,7 +56,7 @@ func TestUUIDv7Uniqueness(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Generate failed: %v", err)
 		}
-		val := out.Fields[0].Value
+		val := out.PrimaryFields()[0].Value
 		if _, exists := seen[val]; exists {
 			t.Fatalf("duplicate UUID at iteration %d: %s", i, val)
 		}
@@ -77,8 +77,8 @@ func TestUUIDv7TimestampMonotonic(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if out1.Fields[0].Value >= out2.Fields[0].Value {
-		t.Errorf("UUIDs not time-ordered: %s >= %s", out1.Fields[0].Value, out2.Fields[0].Value)
+	if out1.PrimaryFields()[0].Value >= out2.PrimaryFields()[0].Value {
+		t.Errorf("UUIDs not time-ordered: %s >= %s", out1.PrimaryFields()[0].Value, out2.PrimaryFields()[0].Value)
 	}
 }
 

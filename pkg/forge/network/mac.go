@@ -32,13 +32,15 @@ func (m *MAC) Generate(ctx context.Context, opts forge.Options) (*forge.Output, 
 
 	addr[0] = (addr[0] | 0x02) & 0xFE
 
-	return &forge.Output{
-		Name: "mac",
-		Fields: []forge.Field{
-			{Key: "value", Value: fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x",
-				addr[0], addr[1], addr[2], addr[3], addr[4], addr[5])},
-		},
-	}, nil
+	return forge.SingleArtifact("mac", forge.Field{Key: "value", Value: fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x",
+		addr[0], addr[1], addr[2], addr[3], addr[4], addr[5])}), nil
+}
+
+func (m *MAC) Flags() []forge.FlagDef {
+	return []forge.FlagDef{
+		{Name: "format", Type: "string", Default: "colon", Description: "MAC address format",
+			Options: []string{"colon", "dash", "dot"}},
+	}
 }
 
 func (m *MAC) Bench(ctx context.Context) (*forge.BenchResult, error) {

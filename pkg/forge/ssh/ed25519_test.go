@@ -17,12 +17,12 @@ func TestEd25519Generate(t *testing.T) {
 		t.Fatalf("Generate failed: %v", err)
 	}
 
-	if len(out.Fields) != 2 {
-		t.Fatalf("expected 2 fields, got %d", len(out.Fields))
+	if len(out.PrimaryFields()) != 2 {
+		t.Fatalf("expected 2 fields, got %d", len(out.PrimaryFields()))
 	}
 
-	privField := out.Fields[0]
-	pubField := out.Fields[1]
+	privField := out.PrimaryFields()[0]
+	pubField := out.PrimaryFields()[1]
 
 	if !privField.Sensitive {
 		t.Error("private key should be marked sensitive")
@@ -44,10 +44,10 @@ func TestEd25519KeyParseable(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = gossh.ParsePublicKey([]byte(out.Fields[1].Value))
+	_, err = gossh.ParsePublicKey([]byte(out.PrimaryFields()[1].Value))
 	if err != nil {
 		// ParsePublicKey wants wire format; use ParseAuthorizedKey instead.
-		_, _, _, _, err = gossh.ParseAuthorizedKey([]byte(out.Fields[1].Value))
+		_, _, _, _, err = gossh.ParseAuthorizedKey([]byte(out.PrimaryFields()[1].Value))
 		if err != nil {
 			t.Fatalf("public key not parseable: %v", err)
 		}
@@ -62,7 +62,7 @@ func TestEd25519Uniqueness(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		pub := out.Fields[1].Value
+		pub := out.PrimaryFields()[1].Value
 		if _, exists := keys[pub]; exists {
 			t.Fatalf("duplicate key at iteration %d", i)
 		}

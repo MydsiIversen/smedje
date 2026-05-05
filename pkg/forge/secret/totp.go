@@ -68,13 +68,10 @@ func (t *TOTP) Generate(ctx context.Context, opts forge.Options) (*forge.Output,
 		period,
 	)
 
-	return &forge.Output{
-		Name: "totp",
-		Fields: []forge.Field{
-			{Key: "secret", Value: secret, Sensitive: true},
-			{Key: "uri", Value: uri},
-		},
-	}, nil
+	return forge.SingleArtifact("totp",
+		forge.Field{Key: "secret", Value: secret, Sensitive: true},
+		forge.Field{Key: "uri", Value: uri},
+	), nil
 }
 
 func (t *TOTP) Bench(ctx context.Context) (*forge.BenchResult, error) {

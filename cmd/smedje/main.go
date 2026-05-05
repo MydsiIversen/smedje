@@ -32,6 +32,7 @@ func init() {
 }
 
 func main() {
+	registerCompletions()
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

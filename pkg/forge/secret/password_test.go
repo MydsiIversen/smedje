@@ -14,11 +14,11 @@ func TestPasswordDefaultLength(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	pw := out.Fields[0].Value
+	pw := out.PrimaryFields()[0].Value
 	if len(pw) != 24 {
 		t.Errorf("default length = %d, want 24", len(pw))
 	}
-	if !out.Fields[0].Sensitive {
+	if !out.PrimaryFields()[0].Sensitive {
 		t.Error("password should be marked sensitive")
 	}
 }
@@ -30,8 +30,8 @@ func TestPasswordCustomLength(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(out.Fields[0].Value) != 32 {
-		t.Errorf("length = %d, want 32", len(out.Fields[0].Value))
+	if len(out.PrimaryFields()[0].Value) != 32 {
+		t.Errorf("length = %d, want 32", len(out.PrimaryFields()[0].Value))
 	}
 }
 
@@ -60,7 +60,7 @@ func TestPasswordCharsets(t *testing.T) {
 		if err != nil {
 			t.Fatalf("charset=%q: %v", tc.charset, err)
 		}
-		for _, c := range out.Fields[0].Value {
+		for _, c := range out.PrimaryFields()[0].Value {
 			if !strings.ContainsRune(tc.allowed, c) {
 				t.Errorf("charset=%q: unexpected char %q", tc.charset, c)
 				break
@@ -77,11 +77,23 @@ func TestPasswordUniqueness(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		pw := out.Fields[0].Value
+		pw := out.PrimaryFields()[0].Value
 		if _, exists := seen[pw]; exists {
 			t.Fatalf("duplicate password at iteration %d", i)
 		}
 		seen[pw] = struct{}{}
+	}
+}
+
+func TestPasswordFlags(t *testing.T) {
+	g := &Password{}
+	fd, ok := (forge.Generator)(g).(forge.FlagDescriber)
+	if !ok {
+		t.Fatal("Password does not implement FlagDescriber")
+	}
+	flags := fd.Flags()
+	if len(flags) != 2 {
+		t.Fatalf("got %d flags, want 2", len(flags))
 	}
 }
 

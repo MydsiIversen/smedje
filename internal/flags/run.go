@@ -19,6 +19,7 @@ type RunOptions struct {
 	Count     int
 	Format    string
 	SQLTable  string
+	OutputDir string
 	Writer    io.Writer
 }
 
@@ -44,6 +45,16 @@ func RunGenerate(ctx context.Context, r RunOptions) error {
 		out, err := r.Generator.Generate(ctx, r.Opts)
 		if err != nil {
 			return err
+		}
+		if r.OutputDir != "" {
+			paths, err := output.WriteDir(r.OutputDir, out, r.Format)
+			if err != nil {
+				return err
+			}
+			for _, p := range paths {
+				fmt.Fprintln(r.Writer, p)
+			}
+			return nil
 		}
 		return output.Render(r.Writer, out, r.Format)
 	}

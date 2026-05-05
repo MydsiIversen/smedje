@@ -76,12 +76,13 @@ func (s *Snowflake) Generate(ctx context.Context, opts forge.Options) (*forge.Ou
 
 	id := (nowMS << 22) | (workerID << 12) | seq
 
-	return &forge.Output{
-		Name: "snowflake",
-		Fields: []forge.Field{
-			{Key: "value", Value: strconv.FormatInt(id, 10)},
-		},
-	}, nil
+	return forge.SingleArtifact("snowflake", forge.Field{Key: "value", Value: strconv.FormatInt(id, 10)}), nil
+}
+
+func (s *Snowflake) Flags() []forge.FlagDef {
+	return []forge.FlagDef{
+		{Name: "worker", Type: "int", Default: "0", Description: "Worker ID (0-1023)"},
+	}
 }
 
 func (s *Snowflake) Bench(ctx context.Context) (*forge.BenchResult, error) {

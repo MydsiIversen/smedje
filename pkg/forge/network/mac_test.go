@@ -18,7 +18,7 @@ func TestMACFormat(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	val := out.Fields[0].Value
+	val := out.PrimaryFields()[0].Value
 	if !macPattern.MatchString(val) {
 		t.Errorf("output %q does not match MAC pattern", val)
 	}
@@ -31,7 +31,7 @@ func TestMACLocallyAdministered(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		val := out.Fields[0].Value
+		val := out.PrimaryFields()[0].Value
 		var first byte
 		fmt.Sscanf(val[:2], "%02x", &first)
 
@@ -52,11 +52,23 @@ func TestMACUniqueness(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		val := out.Fields[0].Value
+		val := out.PrimaryFields()[0].Value
 		if _, exists := seen[val]; exists {
 			t.Fatalf("duplicate MAC at iteration %d: %s", i, val)
 		}
 		seen[val] = struct{}{}
+	}
+}
+
+func TestMACFlags(t *testing.T) {
+	g := &MAC{}
+	fd, ok := (forge.Generator)(g).(forge.FlagDescriber)
+	if !ok {
+		t.Fatal("MAC does not implement FlagDescriber")
+	}
+	flags := fd.Flags()
+	if len(flags) != 1 {
+		t.Fatalf("got %d flags, want 1", len(flags))
 	}
 }
 
