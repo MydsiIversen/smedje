@@ -10,6 +10,8 @@ import (
 	"github.com/smedje/smedje/internal/web"
 
 	// Ensure all generator packages are registered.
+	_ "github.com/smedje/smedje/pkg/forge/crypto"
+	_ "github.com/smedje/smedje/pkg/forge/email"
 	_ "github.com/smedje/smedje/pkg/forge/id"
 	_ "github.com/smedje/smedje/pkg/forge/network"
 	_ "github.com/smedje/smedje/pkg/forge/secret"

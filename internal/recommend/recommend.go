@@ -116,15 +116,15 @@ var Recommendations = map[string][]Recommendation{
 			Why:     "fastest, smallest, most secure modern option",
 			Command: "smedje ssh ed25519",
 			Alternatives: []Alternative{
-				{Name: "RSA-3072", When: "legacy systems without Ed25519 support (planned for v0.4)"},
+				{Name: "RSA-4096", When: "legacy systems without Ed25519 support"},
 			},
 			Avoid: []string{"RSA-1024 (broken)", "DSA (deprecated)", "ECDSA with P-192"},
 		},
 		{
 			UseCase: "legacy compatibility",
-			Primary: "RSA-3072 (planned for v0.4)",
+			Primary: "RSA-4096",
 			Why:     "widest compatibility across old SSH servers",
-			Command: "smedje ssh ed25519 (use Ed25519 where supported)",
+			Command: "smedje ssh rsa --bits 4096",
 			Alternatives: []Alternative{
 				{Name: "Ed25519", When: "server supports it (OpenSSH 6.5+)"},
 			},
@@ -134,6 +134,13 @@ var Recommendations = map[string][]Recommendation{
 			Primary: "Ed25519",
 			Why:     "deterministic signatures, fast verification, compact",
 			Command: "smedje ssh ed25519",
+		},
+		{
+			UseCase: "constrained environments",
+			Primary: "ECDSA P-256",
+			Why:     "smaller keys than RSA, wider support than Ed25519 on embedded devices",
+			Command: "smedje ssh ecdsa",
+			Avoid:   []string{"RSA-2048 for new deployments"},
 		},
 	},
 	"tls-cert": {
@@ -148,15 +155,36 @@ var Recommendations = map[string][]Recommendation{
 		},
 		{
 			UseCase: "internal mTLS",
-			Primary: "Internal CA + leaf certs (planned for v0.4)",
-			Why:     "one root in each service's trust store, sign many leaves",
-			Command: "smedje tls self-signed (interim; CA planned for v0.4)",
+			Primary: "mTLS bundle (CA + server + client)",
+			Why:     "mutual authentication for zero-trust service communication",
+			Command: "smedje tls mtls",
 		},
 		{
 			UseCase: "publicly-trusted",
 			Primary: "Let's Encrypt or your organization's CA",
 			Why:     "Smedje does not issue publicly-trusted certs",
-			Command: "smedje tls self-signed (for CSR generation, planned for v0.4)",
+			Command: "smedje tls csr --cn example.com",
+		},
+		{
+			UseCase: "internal PKI",
+			Primary: "CA chain with Ed25519",
+			Why:     "one root in each service's trust store, sign many leaves",
+			Command: "smedje tls ca-chain",
+			Alternatives: []Alternative{
+				{Name: "step-ca", When: "need automated certificate lifecycle management"},
+			},
+		},
+		{
+			UseCase: "service mesh mTLS",
+			Primary: "mTLS bundle (CA + server + client)",
+			Why:     "mutual authentication for zero-trust service communication",
+			Command: "smedje tls mtls --cn myservice.local",
+		},
+		{
+			UseCase: "public CA submission",
+			Primary: "CSR (Certificate Signing Request)",
+			Why:     "generate a private key and CSR for submission to a public CA",
+			Command: "smedje tls csr --cn example.com --san example.com,www.example.com",
 		},
 	},
 	"password": {
@@ -213,25 +241,35 @@ var Recommendations = map[string][]Recommendation{
 	"jwt": {
 		{
 			UseCase: "OIDC integration",
-			Primary: "ES256 / P-256 (planned for v0.4)",
+			Primary: "ES256 / P-256",
 			Why:     "required by many OIDC providers, compact signatures",
-			Command: "(planned for v0.4)",
+			Command: "smedje jwt es256",
+			Alternatives: []Alternative{
+				{Name: "RS256", When: "legacy systems requiring RSA"},
+			},
 		},
 		{
 			UseCase: "internal service token",
-			Primary: "EdDSA / Ed25519 (planned for v0.4)",
+			Primary: "EdDSA / Ed25519",
 			Why:     "fastest verification, smallest keys, modern choice",
-			Command: "(planned for v0.4)",
+			Command: "smedje jwt eddsa",
 			Alternatives: []Alternative{
 				{Name: "ES256", When: "need broader JWT library support"},
 			},
 		},
 		{
 			UseCase: "symmetric only",
-			Primary: "HS256 (planned for v0.4)",
+			Primary: "HS256",
 			Why:     "simplest when signer and verifier share a key",
-			Command: "(planned for v0.4)",
+			Command: "smedje jwt hs256",
 			Avoid:   []string{"sharing the key with untrusted parties"},
+		},
+		{
+			UseCase: "legacy RSA integration",
+			Primary: "RS256",
+			Why:     "widest JWT library compatibility",
+			Command: "smedje jwt rs256",
+			Avoid:   []string{"RS384/RS512 (no practical security gain over RS256)"},
 		},
 	},
 	"secret": {
@@ -251,7 +289,7 @@ var Recommendations = map[string][]Recommendation{
 			UseCase: "pre-shared key (PSK)",
 			Primary: "32-byte random (base64)",
 			Why:     "256 bits matches most symmetric cipher key sizes",
-			Command: "smedje password --length 44 --charset alphanum (interim; PSK gen planned)",
+			Command: "smedje network ipsec-psk",
 		},
 	},
 	"vpn-key": {
@@ -269,6 +307,98 @@ var Recommendations = map[string][]Recommendation{
 			Alternatives: []Alternative{
 				{Name: "certificate-based", When: "scale beyond a handful of peers"},
 			},
+		},
+		{
+			UseCase: "multi-site WireGuard",
+			Primary: "WireGuard mesh",
+			Why:     "generates N peer configs with cross-referenced public keys",
+			Command: "smedje wireguard mesh --peers 3",
+		},
+		{
+			UseCase: "legacy site-to-site VPN",
+			Primary: "IPsec pre-shared key",
+			Why:     "256-bit hex PSK for IKEv2 tunnels",
+			Command: "smedje network ipsec-psk",
+			Alternatives: []Alternative{
+				{Name: "certificate-based", When: "scaling beyond a handful of peers"},
+			},
+		},
+	},
+	"network-secret": {
+		{
+			UseCase: "site-to-site VPN",
+			Primary: "IPsec PSK (hex, 32 bytes)",
+			Why:     "standard pre-shared key for IKEv2 tunnels, 256-bit entropy",
+			Command: "smedje network ipsec-psk",
+			Alternatives: []Alternative{
+				{Name: "certificate-based", When: "scaling beyond a handful of peers"},
+			},
+			Avoid: []string{"shared secrets over 64 bytes (diminishing returns)"},
+		},
+		{
+			UseCase: "AAA / RADIUS",
+			Primary: "RADIUS shared secret (base64, 24 bytes)",
+			Why:     "authenticates RADIUS client-server communication",
+			Command: "smedje network radius-secret",
+		},
+		{
+			UseCase: "legacy monitoring",
+			Primary: "SNMPv3 community string",
+			Why:     "alphanumeric, avoids special-char issues in SNMP configs",
+			Command: "smedje network snmp-community",
+			Avoid:   []string{"SNMPv1/v2c community strings in production (cleartext)"},
+		},
+		{
+			UseCase: "OpenVPN HMAC firewall",
+			Primary: "OpenVPN tls-auth key",
+			Why:     "HMAC firewall drops unauthenticated packets before TLS handshake",
+			Command: "smedje network openvpn-tls-auth",
+		},
+	},
+	"email-auth": {
+		{
+			UseCase: "domain email signing",
+			Primary: "DKIM RSA-2048 keypair",
+			Why:     "signs outgoing email, DNS TXT record for verification",
+			Command: "smedje email dkim --selector mail --domain example.com",
+			Avoid:   []string{"DKIM keys shorter than 1024 bits (insecure)", "RSA-4096 DKIM (DNS TXT record too large for some providers)"},
+		},
+		{
+			UseCase: "email policy enforcement",
+			Primary: "DMARC DNS record",
+			Why:     "instructs receivers how to handle SPF/DKIM failures",
+			Command: "smedje email dmarc --domain example.com --policy quarantine",
+			Avoid:   []string{"p=none long-term (provides no protection)"},
+		},
+	},
+	"age": {
+		{
+			UseCase: "file encryption",
+			Primary: "age X25519 keypair",
+			Why:     "simple, modern, no configuration needed — the GPG replacement",
+			Command: "smedje age x25519",
+			Avoid:   []string{"GPG for new projects (complexity, key management burden)"},
+		},
+	},
+	"storage-id": {
+		{
+			UseCase: "SAN target naming",
+			Primary: "iSCSI IQN",
+			Why:     "globally unique, human-readable, includes authority and date",
+			Command: "smedje network iqn --authority com.example --target storage.lun0",
+		},
+		{
+			UseCase: "Fibre Channel WWN",
+			Primary: "WWPN (NAA 5 format)",
+			Why:     "48-bit random in NAA 5 format for FC fabric addressing",
+			Command: "smedje network wwpn",
+		},
+		{
+			UseCase: "VM / container NIC",
+			Primary: "OUI-based MAC address",
+			Why:     "vendor-prefixed avoids collisions with real hardware",
+			Command: "smedje oui-mac --oui 00:50:56",
+			Avoid:   []string{"random MACs without OUI prefix (potential collisions with real hardware)"},
 		},
 	},
 }
