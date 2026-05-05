@@ -54,7 +54,7 @@ var Recommendations = map[string][]Recommendation{
 			UseCase: "user-facing API",
 			Primary: "Stripe-style prefixed UUIDv7",
 			Why:     "time-ordered for DB performance, prefix identifies resource type",
-			Command: "smedje uuid v7 (typeid prefix planned for v0.4)",
+			Command: "smedje uuid v7",
 			Alternatives: []Alternative{
 				{Name: "nanoid", When: "shorter URL-safe slugs without time ordering"},
 			},
@@ -208,17 +208,17 @@ var Recommendations = map[string][]Recommendation{
 		},
 		{
 			UseCase: "passphrase",
-			Primary: "Diceware (planned for v0.4)",
-			Why:     "memorable, high entropy from word combinations",
-			Command: "smedje password --length 24 (interim)",
+			Primary: "Long alphanumeric password",
+			Why:     "memorable alternatives like diceware are on the roadmap; use length for entropy",
+			Command: "smedje password --length 24 --charset alphanum",
 		},
 	},
 	"hash": {
 		{
 			UseCase: "password storage",
-			Primary: "argon2id (planned for v0.4)",
+			Primary: "argon2id",
 			Why:     "memory-hard, resistant to GPU/ASIC attacks",
-			Command: "(planned for v0.4; use bcrypt as interim)",
+			Command: "use argon2id in your application; Smedje generates the secrets, not the hashes",
 			Alternatives: []Alternative{
 				{Name: "bcrypt", When: "acceptable but no longer state-of-the-art"},
 			},
@@ -226,15 +226,15 @@ var Recommendations = map[string][]Recommendation{
 		},
 		{
 			UseCase: "general-purpose integrity",
-			Primary: "BLAKE3 or SHA-256 (planned for v0.4)",
+			Primary: "BLAKE3 or SHA-256",
 			Why:     "BLAKE3 is fastest; SHA-256 is most widely verified",
-			Command: "(planned for v0.4)",
+			Command: "use your platform's crypto library; Smedje generates keys, not hashes",
 		},
 		{
 			UseCase: "FIPS compliance",
-			Primary: "PBKDF2-SHA256 (planned for v0.4)",
+			Primary: "PBKDF2-SHA256",
 			Why:     "NIST SP 800-132 approved for key derivation",
-			Command: "(planned for v0.4)",
+			Command: "use your platform's FIPS-validated crypto module",
 			Avoid:   []string{"bcrypt (not FIPS-approved)", "scrypt (not FIPS-approved)"},
 		},
 	},
