@@ -80,7 +80,7 @@ func TestOUIMACUnknownPrefix(t *testing.T) {
 func TestOUIMACFormatDash(t *testing.T) {
 	g := &OUIMAC{}
 	out, err := g.Generate(context.Background(), forge.Options{
-		Params: map[string]string{"format": "dash"},
+		Params: map[string]string{"style": "dash"},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -95,7 +95,7 @@ func TestOUIMACFormatDash(t *testing.T) {
 func TestOUIMACFormatDot(t *testing.T) {
 	g := &OUIMAC{}
 	out, err := g.Generate(context.Background(), forge.Options{
-		Params: map[string]string{"format": "dot"},
+		Params: map[string]string{"style": "dot"},
 	})
 	if err != nil {
 		t.Fatal(err)

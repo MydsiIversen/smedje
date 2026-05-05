@@ -258,6 +258,13 @@ func Resolve(address string) ([]Generator, error) {
 		return inGroup, nil
 	}
 	if len(inGroup) > 1 {
+		// If one generator's address is exactly the bare name (group == name),
+		// prefer that exact match over listing all group variants.
+		for _, g := range inGroup {
+			if g.Name() == g.Group() {
+				return []Generator{g}, nil
+			}
+		}
 		var addrs []string
 		for _, g := range inGroup {
 			addrs = append(addrs, Address(g))
