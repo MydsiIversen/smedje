@@ -15,7 +15,7 @@ var Defaults = map[string]string{
 
 	"snowflake.worker": "0",
 
-	"mac.format": "colon",
+	"mac.style": "colon",
 
 	"bulk.max-count": "100000000",
 
