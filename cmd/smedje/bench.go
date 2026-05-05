@@ -19,6 +19,7 @@ func init() {
 	benchCmd.AddCommand(benchAllCmd)
 	benchCmd.AddCommand(benchCompareCmd)
 	benchCmd.AddCommand(benchListCmd)
+	benchListCmd.Flags().String("category", "", "Filter by category: id, crypto, secret, network")
 
 	for _, cmd := range []*cobra.Command{benchCmd, benchAllCmd, benchCompareCmd} {
 		cmd.Flags().Duration("duration", 2*time.Second, "Benchmark duration per generator")
@@ -101,8 +102,17 @@ var benchListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all addressable generator names",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		for _, addr := range forge.Addresses() {
-			fmt.Println(addr)
+		category, _ := cmd.Flags().GetString("category")
+		var addrs []string
+		for _, g := range forge.All() {
+			if category != "" && string(g.Category()) != category {
+				continue
+			}
+			addrs = append(addrs, forge.Address(g))
+		}
+		sort.Strings(addrs)
+		for _, a := range addrs {
+			fmt.Println(a)
 		}
 		return nil
 	},

@@ -9,6 +9,7 @@ import (
 
 // Reader is the entropy source used by all generators. It defaults to
 // crypto/rand.Reader and exists so a future --paranoid mode can wrap it.
+// TODO: --paranoid flag for additional entropy mixing (deferred until real demand).
 var Reader io.Reader = rand.Reader
 
 // Read fills b with cryptographically secure random bytes.
