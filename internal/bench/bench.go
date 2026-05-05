@@ -77,6 +77,11 @@ func Run(ctx context.Context, g forge.Generator, opts Options) (*Result, error) 
 	}
 
 	genOpts := forge.Options{Count: 1, Format: "quiet"}
+	if bp, ok := g.(forge.BenchParamer); ok {
+		genOpts = bp.BenchOptions()
+		genOpts.Count = 1
+		genOpts.Format = "quiet"
+	}
 
 	// Warmup
 	warmEnd := time.Now().Add(opts.Warmup)

@@ -77,6 +77,13 @@ func (d *DKIM) Flags() []forge.FlagDef {
 	}
 }
 
+func (d *DKIM) BenchOptions() forge.Options {
+	return forge.Options{Params: map[string]string{
+		"selector": "default",
+		"domain":   "example.com",
+	}}
+}
+
 func (d *DKIM) Bench(ctx context.Context) (*forge.BenchResult, error) {
 	return bench.RunLegacy(ctx, d, 0)
 }

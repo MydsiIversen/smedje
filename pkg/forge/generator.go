@@ -134,6 +134,13 @@ type FlagDescriber interface {
 	Flags() []FlagDef
 }
 
+// BenchParamer is optionally implemented by generators that need
+// non-empty Params to run (e.g., required --domain). The returned
+// Options are used by the benchmark harness instead of the zero value.
+type BenchParamer interface {
+	BenchOptions() Options
+}
+
 // Generator is the interface every forge generator implements.
 type Generator interface {
 	// Name returns the CLI-facing name (e.g., "v7", "ed25519").

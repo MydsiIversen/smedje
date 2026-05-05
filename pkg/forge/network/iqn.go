@@ -64,6 +64,13 @@ func (i *IQN) Flags() []forge.FlagDef {
 	}
 }
 
+func (i *IQN) BenchOptions() forge.Options {
+	return forge.Options{Params: map[string]string{
+		"authority": "com.example",
+		"target":    "storage.lun0",
+	}}
+}
+
 func (i *IQN) Bench(ctx context.Context) (*forge.BenchResult, error) {
 	return bench.RunLegacy(ctx, i, 0)
 }

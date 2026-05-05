@@ -58,6 +58,10 @@ func (d *DMARC) Flags() []forge.FlagDef {
 	}
 }
 
+func (d *DMARC) BenchOptions() forge.Options {
+	return forge.Options{Params: map[string]string{"domain": "example.com"}}
+}
+
 func (d *DMARC) Bench(ctx context.Context) (*forge.BenchResult, error) {
 	return bench.RunLegacy(ctx, d, 0)
 }
