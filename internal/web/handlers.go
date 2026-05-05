@@ -552,16 +552,20 @@ func isBatchFormat(format string) bool {
 func outputToArtifact(out *forge.Output) sseArtifact {
 	fields := make(map[string]string, len(out.PrimaryFields()))
 	var value string
+	var sensitive []string
 	for _, f := range out.PrimaryFields() {
 		fields[f.Key] = f.Value
 		if f.Key == "value" {
 			value = f.Value
 		}
+		if f.Sensitive {
+			sensitive = append(sensitive, f.Key)
+		}
 	}
 	if value == "" && len(out.PrimaryFields()) > 0 {
 		value = out.PrimaryFields()[0].Value
 	}
-	return sseArtifact{Value: value, Fields: fields}
+	return sseArtifact{Value: value, Fields: fields, SensitiveKeys: sensitive}
 }
 
 // writeJSON marshals v to JSON and writes it to the response.

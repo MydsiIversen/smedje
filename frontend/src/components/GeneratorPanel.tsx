@@ -94,7 +94,7 @@ export function GeneratorPanel({ address, maxCount }: GeneratorPanelProps) {
     if (count <= 1) {
       generateSingle(schema.address, params, format, seed)
         .then((result) => {
-          setResults([{ value: result.value, fields: result.fields }])
+          setResults([{ value: result.value, fields: result.fields, sensitiveKeys: result.sensitiveKeys }])
           if (result.formatted) setFormatted(result.formatted)
           setForging(false)
           showForgeDone()
@@ -120,7 +120,7 @@ export function GeneratorPanel({ address, maxCount }: GeneratorPanelProps) {
           })
           break
         case "artifact":
-          setResults((prev) => [...prev, { value: event.value, fields: event.fields }])
+          setResults((prev) => [...prev, { value: event.value, fields: event.fields, sensitiveKeys: event.sensitiveKeys }])
           break
         case "done":
           setDurationMs(event.durationMs)

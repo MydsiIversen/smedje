@@ -61,6 +61,7 @@ export interface VersionInfo {
 export interface Artifact {
   value: string
   fields: Record<string, string>
+  sensitiveKeys?: string[]
 }
 
 export type SSEEventType = "status" | "progress" | "artifact" | "done" | "error"
@@ -81,6 +82,7 @@ export interface SSEArtifactEvent {
   type: "artifact"
   value: string
   fields: Record<string, string>
+  sensitiveKeys?: string[]
 }
 
 export interface SSEDoneEvent {

@@ -76,7 +76,7 @@ export function OutputPane({
           {isMultiField(preview) ? (
             <div className="space-y-2">
               {Object.entries(preview.fields).map(([key, val]) => (
-                <ArtifactCard key={key} label={key} value={val} />
+                <ArtifactCard key={key} label={key} value={val} sensitive={preview.sensitiveKeys?.includes(key)} />
               ))}
             </div>
           ) : (
@@ -108,7 +108,7 @@ export function OutputPane({
                 {isMultiField(artifact) ? (
                   <div className="space-y-2 mb-3">
                     {Object.entries(artifact.fields).map(([key, val]) => (
-                      <ArtifactCard key={key} label={key} value={val} />
+                      <ArtifactCard key={key} label={key} value={val} sensitive={artifact.sensitiveKeys?.includes(key)} />
                     ))}
                   </div>
                 ) : (

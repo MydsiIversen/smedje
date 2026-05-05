@@ -58,7 +58,7 @@ export function GeneratorForm({
       }
     }
     generateSingle(schema.address, params, format, seed)
-      .then((result) => onPreview({ value: result.value, fields: result.fields }))
+      .then((result) => onPreview({ value: result.value, fields: result.fields, sensitiveKeys: result.sensitiveKeys }))
       .catch(() => onPreview(null))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schema.address, previewKey, onPreview])
