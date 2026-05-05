@@ -74,6 +74,15 @@ func (t *TOTP) Generate(ctx context.Context, opts forge.Options) (*forge.Output,
 	), nil
 }
 
+func (t *TOTP) Flags() []forge.FlagDef {
+	return []forge.FlagDef{
+		{Name: "issuer", Type: "string", Default: "Smedje", Description: "Issuer label shown in authenticator apps"},
+		{Name: "account", Type: "string", Default: "user@example.com", Description: "Account identifier (e.g. alice@example.com)"},
+		{Name: "digits", Type: "int", Default: "6", Description: "OTP code length", Options: []string{"6", "8"}},
+		{Name: "period", Type: "int", Default: "30", Description: "Time step in seconds", Options: []string{"30", "60"}},
+	}
+}
+
 func (t *TOTP) Bench(ctx context.Context) (*forge.BenchResult, error) {
 	return bench.RunLegacy(ctx, t, 0)
 }

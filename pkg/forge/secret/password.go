@@ -66,8 +66,10 @@ func (p *Password) Generate(ctx context.Context, opts forge.Options) (*forge.Out
 			charset = charsetLower + charsetUpper
 		case "alphanum":
 			charset = charsetLower + charsetUpper + charsetDigits
-		case "digits":
+		case "digits", "numeric":
 			charset = charsetDigits
+		case "hex":
+			charset = charsetDigits + "abcdef"
 		case "full":
 			// default
 		default:
@@ -87,7 +89,7 @@ func (p *Password) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
 		{Name: "length", Type: "int", Default: "24", Description: "Password length (8-256)"},
 		{Name: "charset", Type: "string", Default: "full", Description: "Character set",
-			Options: []string{"full", "alphanum", "alpha", "numeric", "hex"}},
+			Options: []string{"full", "alphanum", "alpha", "digits", "hex"}},
 	}
 }
 

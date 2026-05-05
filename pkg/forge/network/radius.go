@@ -28,6 +28,9 @@ func (r *RADIUSSecret) Generate(ctx context.Context, opts forge.Options) (*forge
 	if v, ok := opts.Params["length"]; ok {
 		fmt.Sscanf(v, "%d", &length)
 	}
+	if length < 8 || length > 128 {
+		return nil, fmt.Errorf("radius: length must be 8-128, got %d", length)
+	}
 	b := make([]byte, length)
 	if _, err := entropy.Read(b); err != nil {
 		return nil, fmt.Errorf("radius: %w", err)
