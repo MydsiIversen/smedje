@@ -1,12 +1,17 @@
 package explain
 
 import (
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/smedje/smedje/pkg/forge/network"
 )
 
 func init() {
@@ -14,6 +19,13 @@ func init() {
 	Register(&ulidDetector{})
 	Register(&nanoidDetector{})
 	Register(&snowflakeDetector{})
+	Register(&macDetector{})
+	Register(&jwtDetector{})
+	Register(&sshPubKeyDetector{})
+	Register(&pemDetector{})
+	Register(&iqnDetector{})
+	Register(&ageKeyDetector{})
+	Register(&wgKeyDetector{})
 }
 
 var uuidRegex = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-([0-9a-f])[0-9a-f]{3}-([0-9a-f])[0-9a-f]{3}-[0-9a-f]{12}$`)
@@ -382,5 +394,231 @@ func (d *snowflakeDetector) Detect(input string) (Match, bool) {
 			"sequence":  fmt.Sprintf("%d", seq),
 		},
 		Layout: layout,
+	}, true
+}
+
+// --- MAC address detector ---
+
+var macRegex = regexp.MustCompile(`^([0-9a-fA-F]{2}[:\-]){5}[0-9a-fA-F]{2}$`)
+
+type macDetector struct{}
+
+func (d *macDetector) Name() string { return "MAC" }
+
+func (d *macDetector) Detect(input string) (Match, bool) {
+	input = strings.TrimSpace(input)
+	if !macRegex.MatchString(input) {
+		return Match{}, false
+	}
+
+	// Normalise to colon-separated uppercase for OUI lookup.
+	normalised := strings.ToUpper(strings.ReplaceAll(input, "-", ":"))
+	prefix := normalised[:8] // first 3 octets, e.g. "00:50:56"
+
+	vendor := network.LookupVendor(prefix)
+	if vendor == "" {
+		vendor = "Unknown"
+	}
+
+	return Match{
+		Format:     "MAC Address",
+		Confidence: 0.85,
+		Fields: map[string]string{
+			"vendor": vendor,
+			"oui":    prefix,
+		},
+	}, true
+}
+
+// --- JWT detector ---
+
+type jwtDetector struct{}
+
+func (d *jwtDetector) Name() string { return "JWT" }
+
+func (d *jwtDetector) Detect(input string) (Match, bool) {
+	input = strings.TrimSpace(input)
+	parts := strings.Split(input, ".")
+	if len(parts) != 3 {
+		return Match{}, false
+	}
+
+	// Decode header (first segment, base64url without padding).
+	headerJSON, err := base64.RawURLEncoding.DecodeString(parts[0])
+	if err != nil {
+		return Match{}, false
+	}
+
+	var header struct {
+		Alg string `json:"alg"`
+		Typ string `json:"typ"`
+		Kid string `json:"kid"`
+	}
+	if err := json.Unmarshal(headerJSON, &header); err != nil {
+		return Match{}, false
+	}
+
+	if header.Alg == "" {
+		return Match{}, false
+	}
+
+	fields := map[string]string{
+		"algorithm": header.Alg,
+	}
+	if header.Typ != "" {
+		fields["type"] = header.Typ
+	}
+	if header.Kid != "" {
+		fields["kid"] = header.Kid
+	}
+
+	return Match{
+		Format:     "JWT",
+		Confidence: 0.90,
+		Fields:     fields,
+	}, true
+}
+
+// --- SSH public key detector ---
+
+type sshPubKeyDetector struct{}
+
+func (d *sshPubKeyDetector) Name() string { return "SSH Public Key" }
+
+func (d *sshPubKeyDetector) Detect(input string) (Match, bool) {
+	input = strings.TrimSpace(input)
+	parts := strings.SplitN(input, " ", 3)
+	if len(parts) < 2 {
+		return Match{}, false
+	}
+
+	algo := parts[0]
+	if !strings.HasPrefix(algo, "ssh-") && !strings.HasPrefix(algo, "ecdsa-") {
+		return Match{}, false
+	}
+
+	fields := map[string]string{
+		"algorithm": algo,
+	}
+	if len(parts) >= 3 {
+		fields["comment"] = parts[2]
+	}
+
+	return Match{
+		Format:     "SSH Public Key",
+		Confidence: 0.90,
+		Fields:     fields,
+	}, true
+}
+
+// --- PEM detector ---
+
+var pemTypeRegex = regexp.MustCompile(`^-----BEGIN ([A-Z][A-Z0-9 ]+)-----`)
+
+type pemDetector struct{}
+
+func (d *pemDetector) Name() string { return "PEM" }
+
+func (d *pemDetector) Detect(input string) (Match, bool) {
+	input = strings.TrimSpace(input)
+
+	// Try strict decode first.
+	if block, _ := pem.Decode([]byte(input)); block != nil {
+		return Match{
+			Format:     "PEM",
+			Confidence: 0.95,
+			Fields: map[string]string{
+				"type": block.Type,
+			},
+		}, true
+	}
+
+	// Fallback: match the BEGIN marker even if the body is malformed/truncated.
+	if m := pemTypeRegex.FindStringSubmatch(input); m != nil {
+		return Match{
+			Format:     "PEM",
+			Confidence: 0.95,
+			Fields: map[string]string{
+				"type": m[1],
+			},
+		}, true
+	}
+
+	return Match{}, false
+}
+
+// --- iSCSI Qualified Name (IQN) detector ---
+
+var iqnRegex = regexp.MustCompile(`^iqn\.(\d{4}-\d{2})\.([^:]+):(.+)$`)
+
+type iqnDetector struct{}
+
+func (d *iqnDetector) Name() string { return "IQN" }
+
+func (d *iqnDetector) Detect(input string) (Match, bool) {
+	input = strings.TrimSpace(input)
+	m := iqnRegex.FindStringSubmatch(input)
+	if m == nil {
+		return Match{}, false
+	}
+
+	return Match{
+		Format:     "iSCSI Qualified Name",
+		Confidence: 0.95,
+		Fields: map[string]string{
+			"date":      m[1],
+			"authority": m[2],
+			"target":    m[3],
+		},
+	}, true
+}
+
+// --- age public key detector ---
+
+type ageKeyDetector struct{}
+
+func (d *ageKeyDetector) Name() string { return "age Key" }
+
+func (d *ageKeyDetector) Detect(input string) (Match, bool) {
+	input = strings.TrimSpace(input)
+	if !strings.HasPrefix(input, "age1") || len(input) != 62 {
+		return Match{}, false
+	}
+
+	return Match{
+		Format:     "age Public Key",
+		Confidence: 0.95,
+		Fields: map[string]string{
+			"type": "public key",
+		},
+	}, true
+}
+
+// --- WireGuard key detector ---
+
+type wgKeyDetector struct{}
+
+func (d *wgKeyDetector) Name() string { return "WireGuard Key" }
+
+func (d *wgKeyDetector) Detect(input string) (Match, bool) {
+	input = strings.TrimSpace(input)
+	if len(input) != 44 {
+		return Match{}, false
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(input)
+	if err != nil {
+		return Match{}, false
+	}
+	if len(decoded) != 32 {
+		return Match{}, false
+	}
+
+	return Match{
+		Format:     "WireGuard Key (possible)",
+		Confidence: 0.40,
+		Fields: map[string]string{
+			"decoded_length": "32 bytes",
+		},
 	}, true
 }

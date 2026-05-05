@@ -233,6 +233,12 @@ var ouiTable = map[string]string{
 	"08:00:27": "Oracle VirtualBox",
 }
 
+// LookupVendor returns the vendor name for a 3-byte OUI prefix (uppercase,
+// colon-separated, e.g. "00:50:56"). Returns empty string if not found.
+func LookupVendor(prefix string) string {
+	return ouiTable[prefix]
+}
+
 // ouiKeys returns a slice of all OUI prefix keys in the table.
 // The order is not guaranteed.
 func ouiKeys() []string {
