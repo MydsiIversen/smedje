@@ -49,7 +49,7 @@ func (s *SNMPCommunity) Generate(ctx context.Context, opts forge.Options) (*forg
 
 func (s *SNMPCommunity) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
-		{Name: "length", Type: "int", Default: "16", Description: "Community string length"},
+		{Name: "length", Type: "int", Default: "16", Description: "String length in characters (alphanumeric a-zA-Z0-9)"},
 	}
 }
 

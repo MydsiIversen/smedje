@@ -20,8 +20,16 @@ func (e *Ed25519) Group() string            { return "ssh" }
 func (e *Ed25519) Description() string      { return "Generate an Ed25519 OpenSSH keypair" }
 func (e *Ed25519) Category() forge.Category { return forge.CategoryCrypto }
 
+func (e *Ed25519) Flags() []forge.FlagDef {
+	return []forge.FlagDef{
+		{Name: "comment", Type: "string", Description: "Key comment embedded in the key file (e.g. user@host)"},
+	}
+}
+
 func (e *Ed25519) Generate(ctx context.Context, opts forge.Options) (*forge.Output, error) {
-	priv, pub, err := generateSSHKeypair("ed25519", 0)
+	comment := opts.Params["comment"]
+
+	priv, pub, err := generateSSHKeypair("ed25519", 0, comment)
 	if err != nil {
 		return nil, err
 	}

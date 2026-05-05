@@ -26,7 +26,9 @@ func (r *RSA) Generate(ctx context.Context, opts forge.Options) (*forge.Output, 
 		fmt.Sscanf(v, "%d", &bits)
 	}
 
-	priv, pub, err := generateSSHKeypair("rsa", bits)
+	comment := opts.Params["comment"]
+
+	priv, pub, err := generateSSHKeypair("rsa", bits, comment)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +42,8 @@ func (r *RSA) Generate(ctx context.Context, opts forge.Options) (*forge.Output, 
 // Flags returns the configurable parameters for RSA key generation.
 func (r *RSA) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
-		{Name: "bits", Type: "int", Default: "4096", Description: "RSA key size", Options: []string{"2048", "4096"}},
+		{Name: "bits", Type: "int", Default: "4096", Description: "Key strength (4096 more secure, 2048 faster)", Options: []string{"2048", "4096"}},
+		{Name: "comment", Type: "string", Description: "Key comment embedded in the key file (e.g. user@host)"},
 	}
 }
 

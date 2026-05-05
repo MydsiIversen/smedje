@@ -58,9 +58,9 @@ func (i *IQN) Generate(ctx context.Context, opts forge.Options) (*forge.Output, 
 
 func (i *IQN) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
-		{Name: "authority", Type: "string", Default: "", Description: "DNS authority in forward order (e.g. com.example)"},
-		{Name: "target", Type: "string", Default: "", Description: "Target name (e.g. storage.lun0)"},
-		{Name: "date", Type: "string", Default: "", Description: "Date in YYYY-MM format; defaults to current month"},
+		{Name: "authority", Type: "string", Description: "Your domain name (e.g. example.com) — reversed automatically per RFC 3720 [required]"},
+		{Name: "target", Type: "string", Description: "Storage target name (e.g. storage.lun0, disk1) [required]"},
+		{Name: "date", Type: "string", Description: "Registration date as YYYY-MM. Defaults to current month"},
 	}
 }
 

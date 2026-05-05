@@ -81,9 +81,8 @@ func (o *OUIMAC) Generate(ctx context.Context, opts forge.Options) (*forge.Outpu
 
 func (o *OUIMAC) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
-		{Name: "oui", Type: "string", Default: "", Description: "OUI prefix (e.g. 00:50:56); random if omitted"},
-		{Name: "format", Type: "string", Default: "colon", Description: "MAC format: colon, dash, dot",
-			Options: []string{"colon", "dash", "dot"}},
+		{Name: "oui", Type: "string", Description: "Vendor OUI prefix (e.g. 00:50:56 for VMware). Random vendor if empty"},
+		{Name: "format", Type: "string", Default: "colon", Description: "Output style: colon (aa:bb:cc), dash (aa-bb-cc), dot (aabb.ccdd Cisco)", Options: []string{"colon", "dash", "dot"}},
 	}
 }
 

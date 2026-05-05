@@ -36,6 +36,9 @@ func (d *DMARC) Generate(ctx context.Context, opts forge.Options) (*forge.Output
 	if ruf, ok := opts.Params["ruf"]; ok && ruf != "" {
 		parts = append(parts, fmt.Sprintf("ruf=mailto:%s", ruf))
 	}
+	if pct, ok := opts.Params["pct"]; ok && pct != "" && pct != "100" {
+		parts = append(parts, fmt.Sprintf("pct=%s", pct))
+	}
 	record := strings.Join(parts, "; ")
 	dnsName := fmt.Sprintf("_dmarc.%s", domain)
 
@@ -47,10 +50,11 @@ func (d *DMARC) Generate(ctx context.Context, opts forge.Options) (*forge.Output
 
 func (d *DMARC) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
-		{Name: "domain", Type: "string", Description: "Domain name [required]"},
-		{Name: "policy", Type: "string", Default: "none", Description: "DMARC policy", Options: []string{"none", "quarantine", "reject"}},
-		{Name: "rua", Type: "string", Description: "Aggregate report email address"},
-		{Name: "ruf", Type: "string", Description: "Forensic report email address"},
+		{Name: "domain", Type: "string", Description: "Email domain (e.g. example.com) [required]"},
+		{Name: "policy", Type: "string", Default: "none", Description: "Action on auth failure: none (monitor), quarantine (spam folder), reject (block)", Options: []string{"none", "quarantine", "reject"}},
+		{Name: "rua", Type: "string", Description: "Email for daily aggregate reports (e.g. dmarc@example.com). mailto: added automatically"},
+		{Name: "ruf", Type: "string", Description: "Email for per-failure forensic reports. Note: Gmail/Outlook don't send these"},
+		{Name: "pct", Type: "int", Default: "100", Description: "Percentage of messages to apply policy to (1-100). Useful for gradual rollout"},
 	}
 }
 

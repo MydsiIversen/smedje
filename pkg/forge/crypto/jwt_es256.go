@@ -61,7 +61,7 @@ func (j *JWTES256) Generate(ctx context.Context, opts forge.Options) (*forge.Out
 // Flags implements forge.FlagDescriber.
 func (j *JWTES256) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
-		{Name: "kid", Type: "string", Default: "", Description: "Key ID; auto-generated from public key SHA-256 if omitted"},
+		{Name: "kid", Type: "string", Description: "Key ID for JWKS (auto-generated from public key fingerprint if empty)"},
 	}
 }
 

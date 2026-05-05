@@ -91,9 +91,9 @@ func (s *SelfSigned) Generate(ctx context.Context, opts forge.Options) (*forge.O
 
 func (s *SelfSigned) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
-		{Name: "cn", Type: "string", Default: "localhost", Description: "Common name"},
-		{Name: "days", Type: "int", Default: "825", Description: "Validity in days"},
-		{Name: "san", Type: "string", Description: "Subject alternative names (comma-separated)"},
+		{Name: "cn", Type: "string", Default: "localhost", Description: "Certificate hostname (e.g. myapp.local)"},
+		{Name: "days", Type: "int", Default: "825", Description: "Validity in days (825 = max for public trust stores)"},
+		{Name: "san", Type: "string", Description: "Extra hostnames or IPs, comma-separated (e.g. api.local,10.0.0.1)"},
 	}
 }
 

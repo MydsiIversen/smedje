@@ -188,10 +188,10 @@ func (c *CAChain) Generate(ctx context.Context, opts forge.Options) (*forge.Outp
 // Flags returns the generator-specific flags for CLI wiring.
 func (c *CAChain) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
-		{Name: "cn", Type: "string", Default: "My CA", Description: "Common name base"},
-		{Name: "days", Type: "int", Default: "825", Description: "Validity in days"},
-		{Name: "depth", Type: "int", Default: "3", Description: "Chain depth (2=root+leaf, 3=root+intermediate+leaf)"},
-		{Name: "san", Type: "string", Description: "Leaf SANs (comma-separated)"},
+		{Name: "cn", Type: "string", Default: "My CA", Description: "Base name for CA chain (produces 'My CA Root CA', 'My CA Intermediate CA', etc.)"},
+		{Name: "days", Type: "int", Default: "825", Description: "Validity in days for all certs in the chain"},
+		{Name: "depth", Type: "int", Default: "3", Description: "Chain depth", Options: []string{"2", "3"}},
+		{Name: "san", Type: "string", Description: "Leaf certificate SANs, comma-separated. Defaults to localhost,127.0.0.1"},
 	}
 }
 

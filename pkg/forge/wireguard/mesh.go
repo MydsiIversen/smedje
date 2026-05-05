@@ -119,9 +119,9 @@ func (m *Mesh) Generate(ctx context.Context, opts forge.Options) (*forge.Output,
 // Flags describes the generator-specific CLI flags.
 func (m *Mesh) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
-		{Name: "peers", Type: "int", Default: "3", Description: "Number of peers in the mesh"},
-		{Name: "endpoint", Type: "string", Description: "Peer endpoints (comma-separated host:port list)"},
-		{Name: "dns", Type: "string", Description: "DNS server for the Interface section"},
+		{Name: "peers", Type: "int", Default: "3", Description: "Number of peers in the mesh (2-255). Each gets a unique keypair and config"},
+		{Name: "endpoint", Type: "string", Description: "Public endpoints, comma-separated (e.g. vpn1.example.com:51820,vpn2.example.com:51820)"},
+		{Name: "dns", Type: "string", Description: "DNS server for all peers (e.g. 1.1.1.1)"},
 	}
 }
 

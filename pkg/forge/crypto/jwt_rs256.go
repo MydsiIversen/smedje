@@ -68,8 +68,8 @@ func (j *JWTRS256) Generate(ctx context.Context, opts forge.Options) (*forge.Out
 // Flags implements forge.FlagDescriber.
 func (j *JWTRS256) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
-		{Name: "bits", Type: "int", Default: "2048", Description: "RSA key size in bits", Options: []string{"2048", "4096"}},
-		{Name: "kid", Type: "string", Default: "", Description: "Key ID; auto-generated from public key SHA-256 if omitted"},
+		{Name: "bits", Type: "int", Default: "2048", Description: "RSA key size (2048 standard, 4096 higher security)", Options: []string{"2048", "4096"}},
+		{Name: "kid", Type: "string", Description: "Key ID for JWKS (auto-generated from public key fingerprint if empty)"},
 	}
 }
 

@@ -42,7 +42,7 @@ func (i *IPsecPSK) Generate(ctx context.Context, opts forge.Options) (*forge.Out
 
 func (i *IPsecPSK) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
-		{Name: "length", Type: "int", Default: "32", Description: "Key length in bytes"},
+		{Name: "length", Type: "int", Default: "32", Description: "Key length in bytes (16-128). 32 = 256 bits, suitable for IKEv2/AES-256"},
 	}
 }
 

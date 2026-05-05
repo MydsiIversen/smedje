@@ -71,9 +71,9 @@ func (d *DKIM) Generate(ctx context.Context, opts forge.Options) (*forge.Output,
 
 func (d *DKIM) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
-		{Name: "selector", Type: "string", Description: "DKIM selector (e.g., mail) [required]"},
-		{Name: "domain", Type: "string", Description: "Domain name (e.g., example.com) [required]"},
-		{Name: "bits", Type: "int", Default: "2048", Description: "RSA key size"},
+		{Name: "selector", Type: "string", Description: "DKIM selector — published at <selector>._domainkey.<domain> (e.g. default, mail) [required]"},
+		{Name: "domain", Type: "string", Description: "Email domain (e.g. example.com) [required]"},
+		{Name: "bits", Type: "int", Default: "2048", Description: "RSA key size. 2048 recommended; 4096 may exceed DNS TXT limits", Options: []string{"1024", "2048", "4096"}},
 	}
 }
 

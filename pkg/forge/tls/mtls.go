@@ -102,11 +102,16 @@ func (m *MTLS) Generate(ctx context.Context, opts forge.Options) (*forge.Output,
 	}
 
 	// Client cert
+	clientCN := "client"
+	if v, ok := opts.Params["client-cn"]; ok && v != "" {
+		clientCN = v
+	}
+
 	clientKey, err := generateKey("ed25519")
 	if err != nil {
 		return nil, fmt.Errorf("tls: client keygen: %w", err)
 	}
-	clientTmpl, err := certTemplate("client", days, nil)
+	clientTmpl, err := certTemplate(clientCN, days, nil)
 	if err != nil {
 		return nil, fmt.Errorf("tls: client template: %w", err)
 	}
@@ -153,9 +158,10 @@ func (m *MTLS) Generate(ctx context.Context, opts forge.Options) (*forge.Output,
 // Flags returns the generator-specific flags for CLI wiring.
 func (m *MTLS) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
-		{Name: "cn", Type: "string", Default: "localhost", Description: "Common name for server and CA certs"},
-		{Name: "days", Type: "int", Default: "825", Description: "Validity in days"},
-		{Name: "san", Type: "string", Description: "Server SANs (comma-separated)"},
+		{Name: "cn", Type: "string", Default: "localhost", Description: "Server hostname; CA uses '<cn> CA'"},
+		{Name: "days", Type: "int", Default: "825", Description: "Validity in days for CA, server, and client certs"},
+		{Name: "san", Type: "string", Description: "Server SANs, comma-separated. Defaults to <cn>,127.0.0.1"},
+		{Name: "client-cn", Type: "string", Default: "client", Description: "Client certificate common name (e.g. my-service)"},
 	}
 }
 

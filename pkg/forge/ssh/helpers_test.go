@@ -6,7 +6,7 @@ import (
 )
 
 func TestGenerateSSHKeypairEd25519(t *testing.T) {
-	priv, pub, err := generateSSHKeypair("ed25519", 0)
+	priv, pub, err := generateSSHKeypair("ed25519", 0, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -19,7 +19,7 @@ func TestGenerateSSHKeypairEd25519(t *testing.T) {
 }
 
 func TestGenerateSSHKeypairRSA(t *testing.T) {
-	priv, pub, err := generateSSHKeypair("rsa", 2048)
+	priv, pub, err := generateSSHKeypair("rsa", 2048, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -32,7 +32,7 @@ func TestGenerateSSHKeypairRSA(t *testing.T) {
 }
 
 func TestGenerateSSHKeypairECDSA(t *testing.T) {
-	priv, pub, err := generateSSHKeypair("ecdsa-p256", 0)
+	priv, pub, err := generateSSHKeypair("ecdsa-p256", 0, "")
 	if err != nil {
 		t.Fatal(err)
 	}

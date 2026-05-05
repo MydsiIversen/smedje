@@ -39,7 +39,7 @@ func (r *RADIUSSecret) Generate(ctx context.Context, opts forge.Options) (*forge
 
 func (r *RADIUSSecret) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
-		{Name: "length", Type: "int", Default: "24", Description: "Secret length in bytes"},
+		{Name: "length", Type: "int", Default: "24", Description: "Secret length in bytes (8-128). 24 = 192 bits, exceeds RADIUS requirements"},
 	}
 }
 

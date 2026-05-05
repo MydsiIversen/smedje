@@ -46,7 +46,7 @@ func (j *JWTHS256) Generate(ctx context.Context, opts forge.Options) (*forge.Out
 // Flags implements forge.FlagDescriber.
 func (j *JWTHS256) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
-		{Name: "length", Type: "int", Default: "32", Description: "Secret length in bytes"},
+		{Name: "length", Type: "int", Default: "32", Description: "Secret length in bytes (min 16). 32 = 256-bit, matches HS256 spec"},
 	}
 }
 

@@ -58,7 +58,7 @@ func (o *OpenVPNTLSAuth) Generate(ctx context.Context, opts forge.Options) (*for
 
 func (o *OpenVPNTLSAuth) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
-		{Name: "bits", Type: "int", Default: "2048", Description: "Key size in bits"},
+		{Name: "bits", Type: "int", Default: "2048", Description: "Key size in bits (must be multiple of 8). 2048 matches openvpn --genkey default"},
 	}
 }
 
