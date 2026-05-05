@@ -92,8 +92,8 @@ func TestPasswordFlags(t *testing.T) {
 		t.Fatal("Password does not implement FlagDescriber")
 	}
 	flags := fd.Flags()
-	if len(flags) != 2 {
-		t.Fatalf("got %d flags, want 2", len(flags))
+	if len(flags) != 3 {
+		t.Fatalf("got %d flags, want 3", len(flags))
 	}
 }
 

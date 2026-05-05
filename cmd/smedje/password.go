@@ -17,6 +17,7 @@ func init() {
 
 	passwordCmd.Flags().Int("length", 24, "Password length (8-256)")
 	passwordCmd.Flags().String("charset", "full", "Character set: full, alpha, alphanum, digits")
+	passwordCmd.Flags().Bool("exclude-ambiguous", false, "Remove visually similar characters (0O1lI)")
 	flags.AddOutputFlags(passwordCmd)
 	flags.AddBulkFlags(passwordCmd)
 	flags.AddBenchFlag(passwordCmd)
@@ -42,14 +43,20 @@ var passwordCmd = &cobra.Command{
 		of := flags.GetOutputFlags(cmd)
 		length, _ := cmd.Flags().GetInt("length")
 		charset, _ := cmd.Flags().GetString("charset")
+		excludeAmbiguous, _ := cmd.Flags().GetBool("exclude-ambiguous")
+
+		params := map[string]string{
+			"length":  fmt.Sprintf("%d", length),
+			"charset": charset,
+		}
+		if excludeAmbiguous {
+			params["exclude-ambiguous"] = "true"
+		}
 
 		opts := forge.Options{
 			Count:  1,
 			Format: of.ResolveFormat(),
-			Params: map[string]string{
-				"length":  fmt.Sprintf("%d", length),
-				"charset": charset,
-			},
+			Params: params,
 		}
 		if handled, err := flags.RunWhy(cmd, g, opts); handled {
 			return err

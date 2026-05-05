@@ -77,6 +77,10 @@ func (p *Password) Generate(ctx context.Context, opts forge.Options) (*forge.Out
 		}
 	}
 
+	if v, ok := opts.Params["exclude-ambiguous"]; ok && v == "true" {
+		charset = removeAmbiguous(charset)
+	}
+
 	pw, err := randomString(length, charset)
 	if err != nil {
 		return nil, err
@@ -90,11 +94,31 @@ func (p *Password) Flags() []forge.FlagDef {
 		{Name: "length", Type: "int", Default: "24", Description: "Password length (8-256)"},
 		{Name: "charset", Type: "string", Default: "full", Description: "Character set",
 			Options: []string{"full", "alphanum", "alpha", "digits", "hex"}},
+		{Name: "exclude-ambiguous", Type: "bool", Default: "false", Description: "Remove visually similar characters (0O1lI)"},
 	}
 }
 
 func (p *Password) Bench(ctx context.Context) (*forge.BenchResult, error) {
 	return bench.RunLegacy(ctx, p, 0)
+}
+
+const ambiguousChars = "0O1lI|"
+
+func removeAmbiguous(charset string) string {
+	var out []byte
+	for i := range charset {
+		found := false
+		for j := range ambiguousChars {
+			if charset[i] == ambiguousChars[j] {
+				found = true
+				break
+			}
+		}
+		if !found {
+			out = append(out, charset[i])
+		}
+	}
+	return string(out)
 }
 
 func randomString(length int, charset string) (string, error) {
