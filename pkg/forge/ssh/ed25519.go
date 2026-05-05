@@ -23,13 +23,15 @@ func (e *Ed25519) Category() forge.Category { return forge.CategoryCrypto }
 func (e *Ed25519) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
 		{Name: "comment", Type: "string", Description: "Key comment embedded in the key file (e.g. user@host)"},
+		{Name: "passphrase", Type: "string", Description: "Passphrase to encrypt the private key (bcrypt KDF)"},
 	}
 }
 
 func (e *Ed25519) Generate(ctx context.Context, opts forge.Options) (*forge.Output, error) {
 	comment := opts.Params["comment"]
+	passphrase := opts.Params["passphrase"]
 
-	priv, pub, err := generateSSHKeypair("ed25519", 0, comment)
+	priv, pub, err := generateSSHKeypair("ed25519", 0, comment, passphrase)
 	if err != nil {
 		return nil, err
 	}

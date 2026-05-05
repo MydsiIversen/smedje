@@ -18,7 +18,7 @@ import (
 // For ECDSA variants, bits is ignored.
 // Returns the private key in OpenSSH PEM format and the public key in
 // authorized_keys format.
-func generateSSHKeypair(algo string, bits int, comment string) (privPEM, pubAuthorized string, err error) {
+func generateSSHKeypair(algo string, bits int, comment string, passphrase ...string) (privPEM, pubAuthorized string, err error) {
 	var signer interface{}
 
 	switch algo {
@@ -53,7 +53,12 @@ func generateSSHKeypair(algo string, bits int, comment string) (privPEM, pubAuth
 		return "", "", fmt.Errorf("ssh: unsupported algo %q", algo)
 	}
 
-	privBlock, err := gossh.MarshalPrivateKey(signer, comment)
+	var privBlock *pem.Block
+	if len(passphrase) > 0 && passphrase[0] != "" {
+		privBlock, err = gossh.MarshalPrivateKeyWithPassphrase(signer, comment, []byte(passphrase[0]))
+	} else {
+		privBlock, err = gossh.MarshalPrivateKey(signer, comment)
+	}
 	if err != nil {
 		return "", "", fmt.Errorf("ssh: marshal private key: %w", err)
 	}

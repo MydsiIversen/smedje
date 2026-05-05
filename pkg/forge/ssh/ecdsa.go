@@ -26,8 +26,9 @@ func (e *ECDSA) Generate(ctx context.Context, opts forge.Options) (*forge.Output
 	}
 
 	comment := opts.Params["comment"]
+	passphrase := opts.Params["passphrase"]
 
-	priv, pub, err := generateSSHKeypair("ecdsa-"+curve, 0, comment)
+	priv, pub, err := generateSSHKeypair("ecdsa-"+curve, 0, comment, passphrase)
 	if err != nil {
 		return nil, err
 	}
@@ -43,6 +44,7 @@ func (e *ECDSA) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
 		{Name: "curve", Type: "string", Default: "p256", Description: "Elliptic curve (P-256 standard, P-384 higher security)", Options: []string{"p256", "p384"}},
 		{Name: "comment", Type: "string", Description: "Key comment embedded in the key file (e.g. user@host)"},
+		{Name: "passphrase", Type: "string", Description: "Passphrase to encrypt the private key (bcrypt KDF)"},
 	}
 }
 

@@ -18,17 +18,20 @@ func init() {
 	sshCmd.AddCommand(sshRSACmd)
 	sshCmd.AddCommand(sshECDSACmd)
 
+	sshEd25519Cmd.Flags().String("passphrase", "", "Passphrase to encrypt the private key")
 	flags.AddOutputFlags(sshEd25519Cmd)
 	flags.AddBulkFlags(sshEd25519Cmd)
 	flags.AddBenchFlag(sshEd25519Cmd)
 	flags.AddWhyFlag(sshEd25519Cmd)
 
 	sshRSACmd.Flags().Int("bits", 4096, "RSA key size (2048 or 4096)")
+	sshRSACmd.Flags().String("passphrase", "", "Passphrase to encrypt the private key")
 	flags.AddOutputFlags(sshRSACmd)
 	flags.AddBulkFlags(sshRSACmd)
 	flags.AddBenchFlag(sshRSACmd)
 
 	sshECDSACmd.Flags().String("curve", "p256", "ECDSA curve (p256 or p384)")
+	sshECDSACmd.Flags().String("passphrase", "", "Passphrase to encrypt the private key")
 	flags.AddOutputFlags(sshECDSACmd)
 	flags.AddBulkFlags(sshECDSACmd)
 	flags.AddBenchFlag(sshECDSACmd)
@@ -53,7 +56,12 @@ var sshEd25519Cmd = &cobra.Command{
 		}
 
 		of := flags.GetOutputFlags(cmd)
-		opts := forge.Options{Count: 1, Format: of.ResolveFormat()}
+		passphrase, _ := cmd.Flags().GetString("passphrase")
+		params := map[string]string{}
+		if passphrase != "" {
+			params["passphrase"] = passphrase
+		}
+		opts := forge.Options{Count: 1, Format: of.ResolveFormat(), Params: params}
 
 		if handled, err := flags.RunWhy(cmd, g, opts); handled {
 			return err
@@ -84,11 +92,16 @@ var sshRSACmd = &cobra.Command{
 		}
 
 		bits, _ := cmd.Flags().GetInt("bits")
+		passphrase, _ := cmd.Flags().GetString("passphrase")
 		of := flags.GetOutputFlags(cmd)
+		params := map[string]string{"bits": fmt.Sprintf("%d", bits)}
+		if passphrase != "" {
+			params["passphrase"] = passphrase
+		}
 		opts := forge.Options{
 			Count:  1,
 			Format: of.ResolveFormat(),
-			Params: map[string]string{"bits": fmt.Sprintf("%d", bits)},
+			Params: params,
 		}
 
 		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
@@ -116,11 +129,16 @@ var sshECDSACmd = &cobra.Command{
 		}
 
 		curve, _ := cmd.Flags().GetString("curve")
+		passphrase, _ := cmd.Flags().GetString("passphrase")
 		of := flags.GetOutputFlags(cmd)
+		params := map[string]string{"curve": curve}
+		if passphrase != "" {
+			params["passphrase"] = passphrase
+		}
 		opts := forge.Options{
 			Count:  1,
 			Format: of.ResolveFormat(),
-			Params: map[string]string{"curve": curve},
+			Params: params,
 		}
 
 		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
