@@ -16,6 +16,7 @@ import (
 func init() {
 	rootCmd.AddCommand(tlsCmd)
 	tlsCmd.AddCommand(tlsSelfSignedCmd)
+	tlsCmd.AddCommand(tlsCAChainCmd)
 
 	tlsSelfSignedCmd.Flags().String("cn", "localhost", "Common name for the certificate")
 	tlsSelfSignedCmd.Flags().Int("days", 825, "Certificate validity in days")
@@ -24,11 +25,59 @@ func init() {
 	flags.AddBulkFlags(tlsSelfSignedCmd)
 	flags.AddBenchFlag(tlsSelfSignedCmd)
 	flags.AddWhyFlag(tlsSelfSignedCmd)
+
+	tlsCAChainCmd.Flags().String("cn", "My CA", "Common name base for the CA chain")
+	tlsCAChainCmd.Flags().Int("days", 825, "Certificate validity in days")
+	tlsCAChainCmd.Flags().Int("depth", 3, "Chain depth (2=root+leaf, 3=root+intermediate+leaf)")
+	tlsCAChainCmd.Flags().StringSlice("san", nil, "Leaf SANs (DNS or IP, comma-separated)")
+	flags.AddOutputFlags(tlsCAChainCmd)
+	flags.AddBenchFlag(tlsCAChainCmd)
 }
 
 var tlsCmd = &cobra.Command{
 	Use:   "tls",
 	Short: "Generate TLS certificates",
+}
+
+var tlsCAChainCmd = &cobra.Command{
+	Use:   "ca-chain",
+	Short: "Generate a TLS CA chain (root → intermediate → leaf)",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		g, ok := forge.Get(forge.CategoryCrypto, "ca-chain")
+		if !ok {
+			return fmt.Errorf("generator not found: crypto/ca-chain")
+		}
+
+		if flags.GetBench(cmd) {
+			return runBench(cmd, g)
+		}
+
+		of := flags.GetOutputFlags(cmd)
+		cn, _ := cmd.Flags().GetString("cn")
+		days, _ := cmd.Flags().GetInt("days")
+		depth, _ := cmd.Flags().GetInt("depth")
+		sans, _ := cmd.Flags().GetStringSlice("san")
+
+		params := map[string]string{
+			"cn":    cn,
+			"days":  fmt.Sprintf("%d", days),
+			"depth": fmt.Sprintf("%d", depth),
+		}
+		if len(sans) > 0 {
+			params["san"] = strings.Join(sans, ",")
+		}
+
+		opts := forge.Options{Count: 1, Format: of.ResolveFormat(), Params: params}
+
+		return flags.RunGenerate(cmd.Context(), flags.RunOptions{
+			Generator: g,
+			Opts:      opts,
+			Count:     1,
+			Format:    of.ResolveFormat(),
+			OutputDir: of.OutputDir,
+			Writer:    os.Stdout,
+		})
+	},
 }
 
 var tlsSelfSignedCmd = &cobra.Command{
