@@ -14,6 +14,7 @@ func init() {
 	rootCmd.AddCommand(snowflakeCmd)
 
 	snowflakeCmd.Flags().Int("worker", 0, "Worker ID (0-1023)")
+	snowflakeCmd.Flags().String("epoch", "2024-01-01", "Custom epoch as YYYY-MM-DD")
 	flags.AddOutputFlags(snowflakeCmd)
 	flags.AddBulkFlags(snowflakeCmd)
 	flags.AddBenchFlag(snowflakeCmd)
@@ -38,12 +39,16 @@ var snowflakeCmd = &cobra.Command{
 		defer flags.CleanupSeed(cmd)
 		of := flags.GetOutputFlags(cmd)
 		worker, _ := cmd.Flags().GetInt("worker")
+		epoch, _ := cmd.Flags().GetString("epoch")
 
 		opts := forge.Options{
 			Count:  1,
 			Format: of.ResolveFormat(),
-			Params: map[string]string{"worker": fmt.Sprintf("%d", worker)},
-			Time:   timeFn,
+			Params: map[string]string{
+				"worker": fmt.Sprintf("%d", worker),
+				"epoch":  epoch,
+			},
+			Time: timeFn,
 		}
 
 		if handled, err := flags.RunWhy(cmd, g, opts); handled {

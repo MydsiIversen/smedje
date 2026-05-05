@@ -52,8 +52,17 @@ func (s *Snowflake) Generate(ctx context.Context, opts forge.Options) (*forge.Ou
 		workerID = n
 	}
 
+	epoch := int64(snowflakeEpoch)
+	if v, ok := opts.Params["epoch"]; ok && v != "" {
+		t, err := time.Parse("2006-01-02", v)
+		if err != nil {
+			return nil, fmt.Errorf("snowflake: epoch must be YYYY-MM-DD, got %q", v)
+		}
+		epoch = t.UnixMilli()
+	}
+
 	s.mu.Lock()
-	nowMS := optTime(opts).UnixMilli() - snowflakeEpoch
+	nowMS := optTime(opts).UnixMilli() - epoch
 	if nowMS == s.lastMS {
 		s.sequence++
 		if s.sequence > 4095 {
@@ -62,7 +71,7 @@ func (s *Snowflake) Generate(ctx context.Context, opts forge.Options) (*forge.Ou
 				nowMS = s.lastMS + 1
 			} else {
 				for nowMS <= s.lastMS {
-					nowMS = time.Now().UnixMilli() - snowflakeEpoch
+					nowMS = time.Now().UnixMilli() - epoch
 				}
 			}
 			s.sequence = 0
@@ -82,6 +91,7 @@ func (s *Snowflake) Generate(ctx context.Context, opts forge.Options) (*forge.Ou
 func (s *Snowflake) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
 		{Name: "worker", Type: "int", Default: "0", Description: "Worker ID (0-1023)"},
+		{Name: "epoch", Type: "string", Default: "2024-01-01", Description: "Custom epoch as YYYY-MM-DD (e.g. 2015-01-01 for Discord)"},
 	}
 }
 

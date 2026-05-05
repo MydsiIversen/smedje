@@ -75,8 +75,8 @@ func TestSnowflakeFlags(t *testing.T) {
 		t.Fatal("Snowflake does not implement FlagDescriber")
 	}
 	flags := fd.Flags()
-	if len(flags) != 1 {
-		t.Fatalf("got %d flags, want 1", len(flags))
+	if len(flags) != 2 {
+		t.Fatalf("got %d flags, want 2", len(flags))
 	}
 }
 
