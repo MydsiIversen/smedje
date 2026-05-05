@@ -53,7 +53,7 @@ func (j *JWTRS256) Generate(ctx context.Context, opts forge.Options) (*forge.Out
 		kid = pubKeyKID(&key.PublicKey)
 	}
 
-	jwks, err := jwksFromKey(kid, &key.PublicKey)
+	jwks, err := jwksFromKey(kid, "RS256", &key.PublicKey)
 	if err != nil {
 		return nil, fmt.Errorf("jwt: rs256: jwks: %w", err)
 	}

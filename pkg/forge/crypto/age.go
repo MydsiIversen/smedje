@@ -23,6 +23,7 @@ func (a *AgeKeypair) Category() forge.Category { return forge.CategoryCrypto }
 
 // Generate returns an age X25519 identity. The private key is Bech32-encoded
 // with the AGE-SECRET-KEY- prefix; the public key uses the age1 prefix.
+// The age library uses crypto/rand directly; it does not accept a custom reader.
 func (a *AgeKeypair) Generate(ctx context.Context, opts forge.Options) (*forge.Output, error) {
 	identity, err := age.GenerateX25519Identity()
 	if err != nil {

@@ -2,6 +2,7 @@ package network
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"math/big"
 
@@ -31,16 +32,14 @@ func (s *SNMPCommunity) Generate(ctx context.Context, opts forge.Options) (*forg
 		fmt.Sscanf(v, "%d", &length)
 	}
 
-	max := big.NewInt(int64(len(snmpCharset)))
+	charsetLen := big.NewInt(int64(len(snmpCharset)))
 	result := make([]byte, length)
 	for i := range result {
-		buf := make([]byte, max.BitLen()/8+1)
-		if _, err := entropy.Read(buf); err != nil {
+		idx, err := rand.Int(entropy.Reader, charsetLen)
+		if err != nil {
 			return nil, fmt.Errorf("snmp: %w", err)
 		}
-		n := new(big.Int).SetBytes(buf)
-		n.Mod(n, max)
-		result[i] = snmpCharset[n.Int64()]
+		result[i] = snmpCharset[idx.Int64()]
 	}
 
 	return forge.SingleArtifact("snmp-community",

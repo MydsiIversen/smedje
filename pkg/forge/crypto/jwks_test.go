@@ -13,7 +13,7 @@ import (
 
 func TestJWKSFromRSA(t *testing.T) {
 	key, _ := rsa.GenerateKey(entropy.Reader, 2048)
-	b, err := jwksFromKey("test-kid", &key.PublicKey)
+	b, err := jwksFromKey("test-kid", "RS256", &key.PublicKey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,7 +36,7 @@ func TestJWKSFromRSA(t *testing.T) {
 
 func TestJWKSFromEC(t *testing.T) {
 	key, _ := ecdsa.GenerateKey(elliptic.P256(), entropy.Reader)
-	b, err := jwksFromKey("ec-kid", &key.PublicKey)
+	b, err := jwksFromKey("ec-kid", "ES256", &key.PublicKey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +51,7 @@ func TestJWKSFromEC(t *testing.T) {
 
 func TestJWKSFromEd25519(t *testing.T) {
 	pub, _, _ := ed25519.GenerateKey(entropy.Reader)
-	b, err := jwksFromKey("ed-kid", pub)
+	b, err := jwksFromKey("ed-kid", "EdDSA", pub)
 	if err != nil {
 		t.Fatal(err)
 	}

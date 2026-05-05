@@ -13,8 +13,8 @@ import (
 )
 
 // jwksFromKey encodes a public key as a single-entry JWKS document.
-// kid is included verbatim; the caller is responsible for generating it.
-func jwksFromKey(kid string, pub interface{}) ([]byte, error) {
+// kid and alg are included verbatim; the caller is responsible for generating them.
+func jwksFromKey(kid, alg string, pub interface{}) ([]byte, error) {
 	var jwk map[string]string
 
 	switch k := pub.(type) {
@@ -22,6 +22,7 @@ func jwksFromKey(kid string, pub interface{}) ([]byte, error) {
 		jwk = map[string]string{
 			"kty": "RSA",
 			"kid": kid,
+			"alg": alg,
 			"use": "sig",
 			"n":   base64URLEncode(k.N.Bytes()),
 			"e":   base64URLEncode(big.NewInt(int64(k.E)).Bytes()),
@@ -36,6 +37,7 @@ func jwksFromKey(kid string, pub interface{}) ([]byte, error) {
 		jwk = map[string]string{
 			"kty": "EC",
 			"kid": kid,
+			"alg": alg,
 			"use": "sig",
 			"crv": crv,
 			"x":   base64URLEncode(padLeft(k.X.Bytes(), size)),
@@ -45,6 +47,7 @@ func jwksFromKey(kid string, pub interface{}) ([]byte, error) {
 		jwk = map[string]string{
 			"kty": "OKP",
 			"kid": kid,
+			"alg": alg,
 			"use": "sig",
 			"crv": "Ed25519",
 			"x":   base64URLEncode([]byte(k)),

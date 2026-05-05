@@ -153,7 +153,7 @@ func (m *MTLS) Generate(ctx context.Context, opts forge.Options) (*forge.Output,
 // Flags returns the generator-specific flags for CLI wiring.
 func (m *MTLS) Flags() []forge.FlagDef {
 	return []forge.FlagDef{
-		{Name: "cn", Type: "string", Default: "localhost", Description: "Common name for server cert"},
+		{Name: "cn", Type: "string", Default: "localhost", Description: "Common name for server and CA certs"},
 		{Name: "days", Type: "int", Default: "825", Description: "Validity in days"},
 		{Name: "san", Type: "string", Description: "Server SANs (comma-separated)"},
 	}

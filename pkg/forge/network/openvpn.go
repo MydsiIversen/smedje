@@ -38,7 +38,7 @@ func (o *OpenVPNTLSAuth) Generate(ctx context.Context, opts forge.Options) (*for
 	}
 
 	var sb strings.Builder
-	sb.WriteString("#\n# 2048 bit OpenVPN static key\n#\n")
+	fmt.Fprintf(&sb, "#\n# %d bit OpenVPN static key\n#\n", bits)
 	sb.WriteString("-----BEGIN OpenVPN Static key V1-----\n")
 	hexStr := hex.EncodeToString(b)
 	for i := 0; i < len(hexStr); i += 32 {

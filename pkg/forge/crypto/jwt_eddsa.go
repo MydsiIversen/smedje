@@ -45,7 +45,7 @@ func (j *JWTEdDSA) Generate(ctx context.Context, opts forge.Options) (*forge.Out
 		kid = pubKeyKID(pub)
 	}
 
-	jwks, err := jwksFromKey(kid, pub)
+	jwks, err := jwksFromKey(kid, "EdDSA", pub)
 	if err != nil {
 		return nil, fmt.Errorf("jwt: eddsa: jwks: %w", err)
 	}
